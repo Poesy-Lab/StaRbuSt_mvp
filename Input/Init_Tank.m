@@ -83,11 +83,28 @@ switch unit.tank.T
 		error("허용된 단위: K, °C, °F, C, F만 입력 가능");
 end
 
+% tank.prop_model - 산화제 물성 계산 모델 선택 (구버전 설정에는 필드가 없으므로 인하우스가 기본)
+if isfield(u.tank, 'prop_model')
+	prop_model_str = string(u.tank.prop_model);
+else
+	prop_model_str = "HelmholtzEOS(in-house)";
+end
+
 % tank.fluid
 switch u.tank.fluid
 	case "N2O"
-		fluid = N2O();
+		if contains(prop_model_str, "CoolProp", "IgnoreCase", true)
+			fluid = N2O_CoolProp(); % CoolProp 기반 (MATLAB pyenv에 CoolProp 필요)
+		else
+			if ~contains(prop_model_str, "Helmholtz", "IgnoreCase", true)
+				warning('Init_Tank:UnknownPropModel', 'Unknown prop_model: %s. Falling back to in-house HelmholtzEOS.', prop_model_str);
+			end
+			fluid = N2O();
+		end
 	case "CO2"
+		if contains(prop_model_str, "CoolProp", "IgnoreCase", true)
+			warning('Init_Tank:PropModelNotSupported', 'CO2에는 CoolProp 물성 모델이 아직 연결되지 않았습니다. 인하우스 EOS를 사용합니다.');
+		end
 		fluid = CO2();
 	otherwise
 		error("N2O, CO2 만 입력 가능");

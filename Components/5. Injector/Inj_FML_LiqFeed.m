@@ -160,8 +160,15 @@ function [r_best, state_best] = FindHEMChokeRatio(fluid, P1, s1, h1, guessT, gue
 %   황금분할 탐색으로 최대점을 찾는다. 상류 상태 (P1, s1)가 직전 호출과 거의 같으면
 %   캐시를 재사용한다 (Pc 반복 루프 및 인접 시간 스텝에서 재탐색 비용 절감).
 persistent cP1 cs1 cr cstate
+% 캐시 허용 오차: 직접 플래시 지원 모델(CoolProp)은 재탐색이 저렴하므로 더 조밀하게
+% (허용 오차가 크면 캐시 갱신 사이 초크 상태가 동결되어 유량 곡선에 계단이 생김)
+if ismethod(fluid, 'GetPropsPS')
+    tol_cache = 0.001;
+else
+    tol_cache = 0.005;
+end
 if ~isempty(cP1) && ~isempty(cr) && isfinite(cr) && ...
-        abs(P1 - cP1) <= 0.005 * cP1 && abs(s1 - cs1) <= 0.005 * abs(cs1)
+        abs(P1 - cP1) <= tol_cache * cP1 && abs(s1 - cs1) <= tol_cache * abs(cs1)
     r_best = cr;
     state_best = cstate;
     return;
@@ -213,6 +220,16 @@ function st = SolveIsentropicState(fluid, P_target, s_target, guessT, guessRho)
 %   (InjState_LiqFeed와 동일한 lsqnonlin 방식. 잔차를 무차원화해 P/s 스케일 차이를
 %   보정하고, 잔차가 크거나 해가 탐색 경계에 붙으면 st.valid = false로 표시하여
 %   가짜 근이 유량 계산에 쓰이는 것을 방지한다.)
+
+% CoolProp 등 직접 P-s 플래시 지원 모델: 내장 플래시 사용 (가짜 근 원천 차단)
+if ismethod(fluid, 'GetPropsPS')
+    Props = fluid.GetPropsPS(P_target, s_target);
+    st.T = Props.T; st.rho = Props.rho; st.h = Props.h; st.X = Props.X;
+    st.rho_l = Props.rho_l; st.rho_v = Props.rho_v;
+    st.valid = Props.state ~= -1 && isfinite(Props.rho) && Props.rho > 0 && isfinite(Props.h);
+    return;
+end
+
 lb = [183, 2.7];
 ub = [309, 1236];
 pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_target) / max(abs(P_target), 1);

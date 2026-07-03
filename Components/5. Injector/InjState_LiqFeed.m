@@ -18,18 +18,31 @@ geussT = x.tank.T;
 geussRho = x.tank.rho_l;
 
 %% System
-% 엔트로피 오차에 가중치 부여 -> 제거
-pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream);
-			   (getfield(fluid.GetProps(v(1), v(2)), 's') - s1) ];
+% CoolProp 등 직접 P-s 플래시를 지원하는 물성 모델이면 내장 플래시 사용
+% (lsqnonlin 역산 불필요, 돔 내부 가짜 근 원천 차단)
+use_flash = ismethod(fluid, 'GetPropsPS');
+if use_flash
+    Props = fluid.GetPropsPS(P_downstream, s1);
+    if Props.state == -1 || ~isfinite(Props.rho)
+        warning('InjState_LiqFeed:FlashFail', 'GetPropsPS failed (P=%.4g Pa). Falling back to lsqnonlin.', P_downstream);
+        use_flash = false;
+    end
+end
 
-% 솔버 초기 추정값으로 탱크의 온도와 액상 밀도를 사용 (InjState_VapFeed.m 형식 참고)
-lb = [183, 2.7];
-ub = [309, 1236];
-v = lsqnonlin(pFunc, [geussT, geussRho], lb, ub, optimset('Display', 'off', 'TolFun', 1e-10));
-T2 = v(1); 
-rho2 = v(2); 
+if ~use_flash
+    % 엔트로피 오차에 가중치 부여 -> 제거
+    pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream);
+                   (getfield(fluid.GetProps(v(1), v(2)), 's') - s1) ];
 
-Props = fluid.GetProps(T2, rho2, 1);
+    % 솔버 초기 추정값으로 탱크의 온도와 액상 밀도를 사용 (InjState_VapFeed.m 형식 참고)
+    lb = [183, 2.7];
+    ub = [309, 1236];
+    v = lsqnonlin(pFunc, [geussT, geussRho], lb, ub, optimset('Display', 'off', 'TolFun', 1e-10));
+    T2 = v(1);
+    rho2 = v(2);
+
+    Props = fluid.GetProps(T2, rho2, 1);
+end
 
 %% Output
 % 상태 변수
@@ -62,4 +75,4 @@ x.inj.h_l = Props.h_l; % J/kg
 x.inj.cp_l = Props.cp_l; % J/kg-K
 x.inj.cv_l = Props.cv_l; % J/kg-K
 
-end 
+end

@@ -27,6 +27,8 @@ unit.tank.T = "°C"; % K, °C, °F, C, F
 
 u.tank.fluid = "N2O"; % N2O, CO2
 
+u.tank.prop_model = "HelmholtzEOS(in-house)"; % HelmholtzEOS(in-house), CoolProp (MATLAB pyenv에 CoolProp 설치 필요)
+
 %% Vent Port
 % u.vent.A = 0.2;
 % unit.vent.A = "mm^2"; % m^2, mm^2, cm^2, in^2
@@ -46,7 +48,7 @@ u.inj.d = 1.4;
 unit.inj.d = "mm"; % m, mm, cm, in
 
 u.inj.n = 28; % 인젝터 개수
-u.inj.Cd = 0.9; % 토출계수
+u.inj.Cd = 0.5; % 토출계수
 
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
