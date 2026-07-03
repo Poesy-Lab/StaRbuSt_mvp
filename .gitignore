@@ -1,0 +1,15 @@
+# 구버전 아카이브 (원시 시험 데이터 포함, ~1.9GB)
+old_ver/
+
+# macOS
+.DS_Store
+
+# MATLAB
+*.asv
+*.autosave
+slprj/
+*.slxc
+
+# 대용량 원시 계측 데이터
+*.lvm
+*_cache.mat
