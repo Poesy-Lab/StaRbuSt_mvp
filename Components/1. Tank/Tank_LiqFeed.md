@@ -172,6 +172,7 @@ x.tank.s = Props.s; % J/kg-K
 x.tank.h = Props.h; % J/kg
 x.tank.cp = Props.cp; % J/kg-K
 x.tank.cv = Props.cv; % J/kg-K
+x.tank.c = Props.c; % m/s
 x.tank.S = m_tank * Props.s; % J/K
 x.tank.H = m_tank * Props.h; % J
 
@@ -182,6 +183,7 @@ x.tank.s_v = Props.s_v; % J/kg-K
 x.tank.h_v = Props.h_v; % J/kg
 x.tank.cp_v = Props.cp_v; % J/kg-K
 x.tank.cv_v = Props.cv_v; % J/kg-K
+x.tank.c_v = Props.c_v; % m/s
 
 % 액상 물성
 x.tank.rho_l = Props.rho_l; % kg/m^3
@@ -190,6 +192,7 @@ x.tank.s_l = Props.s_l; % J/kg-K
 x.tank.h_l = Props.h_l; % J/kg
 x.tank.cp_l = Props.cp_l; % J/kg-K
 x.tank.cv_l = Props.cv_l; % J/kg-K
+x.tank.c_l = Props.c_l; % m/s
 
 ```
 
@@ -252,6 +255,7 @@ x.tank.s = Props.s; % J/kg-K
 x.tank.h = Props.h; % J/kg
 x.tank.cp = Props.cp; % J/kg-K
 x.tank.cv = Props.cv; % J/kg-K
+x.tank.c = Props.c; % m/s
 x.tank.S = m_tank * Props.s; % J/K
 x.tank.H = m_tank * Props.h; % J
 
@@ -262,6 +266,7 @@ x.tank.s_v = Props.s_v; % J/kg-K
 x.tank.h_v = Props.h_v; % J/kg
 x.tank.cp_v = Props.cp_v; % J/kg-K
 x.tank.cv_v = Props.cv_v; % J/kg-K
+x.tank.c_v = Props.c_v; % m/s
 
 % 액상 물성
 x.tank.rho_l = Props.rho_l; % kg/m^3
@@ -270,6 +275,7 @@ x.tank.s_l = Props.s_l; % J/kg-K
 x.tank.h_l = Props.h_l; % J/kg
 x.tank.cp_l = Props.cp_l; % J/kg-K
 x.tank.cv_l = Props.cv_l; % J/kg-K
+x.tank.c_l = Props.c_l; % m/s
 
 end
 ```
