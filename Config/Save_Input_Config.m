@@ -5,7 +5,7 @@ close all
 u.amb.P = 1;
 unit.amb.P = "bar"; % Pa, MPa, bar, atm, mmHg, psi
 
-u.amb.T = 30;
+u.amb.T = 18;
 unit.amb.T = "°C"; % K, °C, °F, C, F
 
 u.amb.g = 9.80665;
@@ -16,13 +16,13 @@ unit.amb.g = "m/s^2"; % m/s^2, ft/s^2
 u.tank.d = 90;
 unit.tank.d = "mm"; % m, mm, cm, in
 
-u.tank.h = 200;
+u.tank.h = 300;
 unit.tank.h = "mm"; % m, mm, cm, in
 
-u.tank.m = 0.9; % 탱크 내부 산화제 총 질량
+u.tank.m = 1.2; % 탱크 내부 산화제 총 질량
 unit.tank.m = "kg"; % kg, g, lb, oz
 
-u.tank.T = 20;
+u.tank.T = 4.5;
 unit.tank.T = "°C"; % K, °C, °F, C, F
 
 u.tank.fluid = "N2O"; % N2O, CO2
@@ -45,8 +45,8 @@ u.vent.mode = 1; % 0: 벤트포트 없음, 1: 벤트포트 있음
 u.inj.d = 1.4;
 unit.inj.d = "mm"; % m, mm, cm, in
 
-u.inj.n = 14; % 인젝터 개수
-u.inj.Cd = 0.5; % 토출계수
+u.inj.n = 28; % 인젝터 개수
+u.inj.Cd = 0.9; % 토출계수
 
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
@@ -139,24 +139,24 @@ unit.nozzle.alpha = "degree"; % degree, radian
 u.nozzle.theta_e = 15;
 unit.nozzle.theta_e = "degree"; % degree, radian
 
-u.nozzle.eta = 0.9; % 노즐 효율 (0~1)
+u.nozzle.eta = 1; % 노즐 효율 (0~1)
 
 
 %% Time
 u.time.start = 0;
 unit.time.start = "s"; % s, ms, min, hr
 
-u.time.run = 10;
+u.time.run = 2;
 unit.time.run = "s"; % s, ms, min, hr   
 
-u.time.stop = 30;   
+u.time.stop = 20;   
 unit.time.stop = "s"; % s, ms, min, hr
 
 u.time.dt = 0.01;
 unit.time.dt = "s"; % s, ms, min, hr
 
 %% Simulation Settings
-u.test.mode = 1; % 1: 연소 시험, 2: 분무 시험
+u.test.mode = 2; % 1: 연소 시험, 2: 분무 시험
 
 %% Save Configuration
 default_filename = 'default_config.mat';
