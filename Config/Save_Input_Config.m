@@ -51,8 +51,8 @@ u.inj.Cd = 0.38; % 토출계수
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
 
-u.inj.model_LiqFeed = "NHNE(Non-Homogeneous Non-Equilibrium Flow)"; % NHNE, CdA
-u.inj.model_VapFeed = "ICF(Isentropic Choked Flow)"; % ICF, CdA
+u.inj.model_LiqFeed = "NHNE(Non-Homogeneous Non-Equilibrium Flow)"; % NHNE, CdA, FML(보이드율 가중, La Luna 2022)
+u.inj.model_VapFeed = "ICF(Isentropic Choked Flow)"; % ICF, CdA, NHNE(FML 증기상, La Luna 2022)
 
 %% Sub injector
 % u.subinj.A = 0.2;

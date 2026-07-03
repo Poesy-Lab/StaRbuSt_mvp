@@ -14,7 +14,7 @@ Author: SRS 33기 박호진
 	2. **단상 항**: SPI(비압축성) 대신 **SPC(단상 압축성, 실기체 등엔트로피 지수 $n$ 적용)** 사용.
 	3. **초킹 판정**: SPC와 HEM 두 기여 항에 **공통 임계 압력비 기준**을 적용하여 초크 유동 예측 가능 (Dyer 모델은 초킹 판정 불가).
 - 액상 유출 시 가중식 (논문 식 (22)): 하류에서 플래싱이 강할수록($\alpha_2 \to 1$) HEM 기여가 커지고, 액상이 유지될수록($\alpha_2 \to 0$) SPC 기여가 커집니다.
-- **선행 조건**: `InjState_LiqFeed.m`이 먼저 호출되어 하류 등엔트로피 상태(`x.inj.rho`, `x.inj.h`, `x.inj.X`, `x.inj.rho_l`, `x.inj.rho_v`)가 계산되어 있어야 합니다. (기존 `Inj_NHNE_LiqFeed` 호출 위치를 본 함수로 교체하여 사용)
+- **선행 조건**: `InjState_LiqFeed.m`이 먼저 호출되어 하류 등엔트로피 상태(`x.inj.rho`, `x.inj.h`, `x.inj.X`, `x.inj.rho_l`, `x.inj.rho_v`)가 계산되어 있어야 합니다. (`Save_Input_Config.m`의 `u.inj.model_LiqFeed`에 **"FML"** 키워드를 포함해 지정하면 `System/LiqFeed.m`의 모델 분기에서 호출됨)
 - 인젝터 입구가 탱크 출구에 바로 연결되어있다는 조건을 적용하였다. (배관 라인 무시)
 # Input
 

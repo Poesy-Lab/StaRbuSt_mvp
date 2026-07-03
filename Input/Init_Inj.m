@@ -48,7 +48,7 @@ end
 if isfield(u.inj, 'model_LiqFeed')
     model_LiqFeed_str = string(u.inj.model_LiqFeed); % Ensure string type
     % Add basic validation if needed (e.g., check for known keywords)
-    if ~(contains(model_LiqFeed_str, "NHNE", "IgnoreCase", true) || contains(model_LiqFeed_str, "CdA", "IgnoreCase", true))
+    if ~(contains(model_LiqFeed_str, "NHNE", "IgnoreCase", true) || contains(model_LiqFeed_str, "CdA", "IgnoreCase", true) || contains(model_LiqFeed_str, "FML", "IgnoreCase", true))
         warning('Init_Inj:UnknownLiqModel', 'Unknown liquid feed model: %s', model_LiqFeed_str);
     end
 else
@@ -59,7 +59,7 @@ end
 if isfield(u.inj, 'model_VapFeed')
     model_VapFeed_str = string(u.inj.model_VapFeed); % Ensure string type
     % Add basic validation if needed
-    if ~(contains(model_VapFeed_str, "ICF", "IgnoreCase", true) || contains(model_VapFeed_str, "CdA", "IgnoreCase", true))
+    if ~(contains(model_VapFeed_str, "ICF", "IgnoreCase", true) || contains(model_VapFeed_str, "CdA", "IgnoreCase", true) || contains(model_VapFeed_str, "NHNE", "IgnoreCase", true))
          warning('Init_Inj:UnknownVapModel', 'Unknown vapor feed model: %s', model_VapFeed_str);
     end
 else

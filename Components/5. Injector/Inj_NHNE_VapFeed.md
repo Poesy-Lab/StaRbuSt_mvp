@@ -12,7 +12,7 @@ Author: SRS 33기 박호진
 - FML은 일반화 NHNE(Non-Homogeneous Non-Equilibrium) 계열의 모델로, 본 파일은 그 중 **증기상 배출(vapor phase draining) 가중식 (논문 식 (23))**을 구현합니다. (액상 유출용 짝 문서: `Inj_FML_LiqFeed.md`)
 - 액상 유출 식 (22)과 가중이 **반전**되어 있습니다: 하류에서 증기가 유지될수록($\alpha_2 \to 1$) 단상 압축성(SPC) 항이 지배하고, 팽창 중 응축으로 액적이 생길수록($\alpha_2 \to 0$) 2상(HEM) 항의 기여가 커집니다. 논문의 실험에서 증기 배출 시 $\alpha_2$는 항상 1에 가깝게 유지되어 물리적 타당성이 확인되었습니다.
 - 기존 `Inj_ICF_VapFeed.m`(등엔트로피 초크 유동, 이상기체 $\gamma$ 사용)과의 관계: FML의 SPC 항은 ICF와 같은 형태이나 비열비 $\gamma$ 대신 **실기체 등엔트로피 지수 $n$**을 사용하며, 여기에 HEM 기여와 보이드율 가중이 추가된 상위 모델입니다.
-- **선행 조건**: `InjState_VapFeed.m`이 먼저 호출되어 하류 등엔트로피 상태(`x.inj.rho`, `x.inj.h`, `x.inj.X`, `x.inj.rho_l`, `x.inj.rho_v`)가 계산되어 있어야 합니다. (기존 `Inj_ICF_VapFeed` 호출 위치를 본 함수로 교체하여 사용)
+- **선행 조건**: `InjState_VapFeed.m`이 먼저 호출되어 하류 등엔트로피 상태(`x.inj.rho`, `x.inj.h`, `x.inj.X`, `x.inj.rho_l`, `x.inj.rho_v`)가 계산되어 있어야 합니다. (`Save_Input_Config.m`의 `u.inj.model_VapFeed`에 **"NHNE"** 키워드를 포함해 지정하면 `System/VapFeed.m`의 모델 분기에서 호출됨)
 - 인젝터를 통한 열전달은 고려되지 않았다.
 - 인젝터 입구가 탱크 출구에 바로 연결되어있다는 조건을 적용하였다. (배관 라인 무시)
 # Input

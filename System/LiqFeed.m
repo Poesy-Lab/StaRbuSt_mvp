@@ -59,12 +59,14 @@ if x.test.mode == 1 % --- Combustion Test Mode Calculations ---
             warning('LiqFeed:InjectorBackPressure', 'Pc (%.2f Pa) >= Tank P (%.2f Pa) at iter %d. Setting mdot_inj to 0.', Pc_old, x_iter.tank.P, iter);
             x_iter.inj.mdot = 0;
         else
-            if contains(x_iter.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
+            if contains(x_iter.inj.model_LiqFeed, "FML", "IgnoreCase", true)
+                 x_iter = Inj_FML_LiqFeed(x_iter); % 보이드율 가중 FML 모델 (La Luna et al. 2022, 식 22)
+            elseif contains(x_iter.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
                  x_iter = Inj_CdA_LiqFeed(x_iter);
             elseif contains(x_iter.inj.model_LiqFeed, "NHNE", "IgnoreCase", true)
                  x_iter = Inj_NHNE_LiqFeed(x_iter);
             else
-                error('LiqFeed:UnknownInjectorModel', 'Unknown liquid injector model: %s', x_iter.inj.model_LiqFeed);
+                error('LiqFeed:UnknownInjectorModel', 'Unknown liquid injector model (expected FML, CdA or NHNE): %s', x_iter.inj.model_LiqFeed);
             end
         end
         
@@ -133,12 +135,14 @@ else % --- Spray Test Mode Calculations (x.test.mode == 2) ---
         warning('LiqFeed:InjectorBackPressureSpray', 'Ambient Pc (%.2f Pa) >= Tank P (%.2f Pa)? Setting mdot_inj to 0.', x.comb.P, x.tank.P);
         x.inj.mdot = 0;
     elseif isfield(x.inj,'mdot') && x.inj.mdot ~= 0 % Check if not already set to 0 by error above
-        if contains(x.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
+        if contains(x.inj.model_LiqFeed, "FML", "IgnoreCase", true)
+             x = Inj_FML_LiqFeed(x); % 보이드율 가중 FML 모델 (La Luna et al. 2022, 식 22)
+        elseif contains(x.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
              x = Inj_CdA_LiqFeed(x);
         elseif contains(x.inj.model_LiqFeed, "NHNE", "IgnoreCase", true)
              x = Inj_NHNE_LiqFeed(x);
         else
-            error('LiqFeed:UnknownInjectorModelSpray', 'Unknown liquid injector model: %s', x.inj.model_LiqFeed);
+            error('LiqFeed:UnknownInjectorModelSpray', 'Unknown liquid injector model (expected FML, CdA or NHNE): %s', x.inj.model_LiqFeed);
         end
     end
     % No fuel regression, combustion, or nozzle calculations needed.

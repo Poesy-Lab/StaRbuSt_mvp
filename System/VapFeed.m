@@ -59,12 +59,14 @@ if x.test.mode == 1 % --- Combustion Test Mode Calculations ---
             warning('VapFeed:InjectorBackPressure', 'Pc (%.2f Pa) >= Tank P (%.2f Pa) at iter %d. Setting mdot_inj to 0.', Pc_old, x_iter.tank.P, iter);
             x_iter.inj.mdot = 0;
         else
-            if contains(x_iter.inj.model_VapFeed, "CdA", "IgnoreCase", true)
+            if contains(x_iter.inj.model_VapFeed, "NHNE", "IgnoreCase", true)
+                 x_iter = Inj_NHNE_VapFeed(x_iter); % FML 증기상 유출 모델 (La Luna et al. 2022, 식 23)
+            elseif contains(x_iter.inj.model_VapFeed, "CdA", "IgnoreCase", true)
                  x_iter = Inj_CdA_VapFeed(x_iter); % Assuming this exists
             elseif contains(x_iter.inj.model_VapFeed, "ICF", "IgnoreCase", true)
                  x_iter = Inj_ICF_VapFeed(x_iter);
             else
-                error('VapFeed:UnknownInjectorModel', 'Unknown vapor injector model (expected CdA or ICF): %s', x_iter.inj.model_VapFeed);
+                error('VapFeed:UnknownInjectorModel', 'Unknown vapor injector model (expected NHNE, CdA or ICF): %s', x_iter.inj.model_VapFeed);
             end
         end
 
@@ -133,12 +135,14 @@ else % --- Spray Test Mode Calculations (x.test.mode == 2) ---
         warning('VapFeed:InjectorBackPressureSpray', 'Ambient Pc (%.2f Pa) >= Tank P (%.2f Pa)? Setting mdot_inj to 0.', x.comb.P, x.tank.P);
         x.inj.mdot = 0;
     elseif isfield(x.inj,'mdot') && x.inj.mdot ~= 0 % Check if not already set to 0 by error above
-        if contains(x.inj.model_VapFeed, "CdA", "IgnoreCase", true)
+        if contains(x.inj.model_VapFeed, "NHNE", "IgnoreCase", true)
+             x = Inj_NHNE_VapFeed(x); % FML 증기상 유출 모델 (La Luna et al. 2022, 식 23)
+        elseif contains(x.inj.model_VapFeed, "CdA", "IgnoreCase", true)
              x = Inj_CdA_VapFeed(x);
         elseif contains(x.inj.model_VapFeed, "ICF", "IgnoreCase", true)
              x = Inj_ICF_VapFeed(x);
         else
-            error('VapFeed:UnknownInjectorModelSpray', 'Unknown vapor injector model (expected CdA or ICF): %s', x.inj.model_VapFeed);
+            error('VapFeed:UnknownInjectorModelSpray', 'Unknown vapor injector model (expected NHNE, CdA or ICF): %s', x.inj.model_VapFeed);
         end
     end
     % No fuel regression, combustion, or nozzle calculations needed.

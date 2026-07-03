@@ -13,3 +13,6 @@ slprj/
 # 대용량 원시 계측 데이터
 *.lvm
 *_cache.mat
+
+# Obsidian 로컬 설정
+.obsidian/
