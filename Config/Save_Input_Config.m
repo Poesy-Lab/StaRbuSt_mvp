@@ -27,7 +27,7 @@ unit.tank.T = "°C"; % K, °C, °F, C, F
 
 u.tank.fluid = "N2O"; % N2O, CO2
 
-u.tank.prop_model = "HelmholtzEOS(in-house)"; % HelmholtzEOS(in-house), CoolProp (MATLAB pyenv에 CoolProp 설치 필요)
+u.tank.prop_model = "CoolProp"; % HelmholtzEOS(in-house), CoolProp (MATLAB pyenv에 CoolProp 설치 필요)
 
 %% Vent Port
 % u.vent.A = 0.2;

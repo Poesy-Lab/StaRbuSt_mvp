@@ -230,5 +230,5 @@ x.inj.mdot = mdot_inj;
 # 전체 코드
 전체 구현은 [Inj_NHNE_VapFeed.m](Inj_NHNE_VapFeed.m) 참조. 위 Input/System/Output 코드에 더해 두 개의 로컬 함수를 포함합니다:
 
-- `FindHEMChokeRatioVap(fluid, P1, s1, h1, guessT, guessRho)` — HEM 질량 플럭스 최대점(초크점) 압력비를 황금분할 탐색으로 찾고, 상류 상태 $(P_1, s_1)$가 직전 호출 대비 0.5% 이내면 캐시(persistent)를 재사용. 유효한 결과만 캐시에 저장.
-- `SolveIsentropicStateVap(fluid, P_target, s_target, guessT, guessRho)` — 목표 압력까지의 등엔트로피 상태를 lsqnonlin으로 계산 (`InjState_VapFeed`와 동일하게 GetProps 상 플래그 2 사용). 잔차 무차원화 및 해 검증(잔차 + 경계 밀착 감지)으로 가짜 근(밀도 상한에 붙은 액체급 해 — 기존 탱크 소진 직전 mdot_HEM 폭주의 원인)을 걸러냄.
+- `FindHEMChokeRatioVap(fluid, P1, s1, h1, guessT, guessRho)` — HEM 질량 플럭스 최대점(초크점) 압력비를 황금분할 탐색으로 찾고, 상류 상태 $(P_1, s_1)$가 직전 호출 대비 허용 오차(인하우스 0.5%, CoolProp 0.1%) 이내면 캐시(persistent)를 재사용. 유효한 결과만 캐시에 저장.
+- `SolveIsentropicStateVap(fluid, P_target, s_target, guessT, guessRho)` — 목표 압력까지의 등엔트로피 상태 계산. CoolProp 물성 모델이면 내장 P–s 플래시(`GetPropsPS`)를 사용하고(가짜 근 원천 차단), 인하우스면 lsqnonlin 역산(`InjState_VapFeed`와 동일하게 GetProps 상 플래그 2 사용)에 잔차 무차원화 + 해 검증(잔차/경계 밀착 감지)을 적용 — 기존 탱크 소진 직전 mdot_HEM 폭주(밀도 상한 가짜 근)를 걸러냄.

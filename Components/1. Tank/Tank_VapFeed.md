@@ -105,19 +105,30 @@ T_{\text{tank}}(t+\Delta t) = \arg \min_{T \geq 0} \left( f(T) \right)^2
 \end{align*}
 $$
 ```MATLAB
-% Determine initial guess for T_tank
-if isfield(x.tank, 'T') && ~isempty(x.tank.T) && isfinite(x.tank.T)
-    T_guess = x.tank.T; % Use previous step's temperature as initial guess
-else
-    T_guess = 300; % Fallback to 300 K if previous T is not available/valid
+% CoolProp 등 직접 rho-h 플래시 지원 모델이면 온도 역산(lsqnonlin) 대신 내장 플래시 사용
+use_flash = ismethod(fluid, 'GetPropsDH');
+if use_flash
+    Props = fluid.GetPropsDH(rho_tank, h_tank);
+    if Props.state == -1 || ~isfinite(Props.P)
+        warning('Tank_VapFeed:FlashFail', 'GetPropsDH failed (rho=%.4g, h=%.4g). Falling back to lsqnonlin.', rho_tank, h_tank);
+        use_flash = false;
+    end
 end
+if ~use_flash
+    % Determine initial guess for T_tank
+    if isfield(x.tank, 'T') && ~isempty(x.tank.T) && isfinite(x.tank.T)
+        T_guess = x.tank.T; % Use previous step's temperature as initial guess
+    else
+        T_guess = 300; % Fallback to 300 K if previous T is not available/valid
+    end
 
-pFunc = @(T_unknown) getfield(fluid.GetProps(T_unknown, rho_tank), 'h') - h_tank;
-% Use T_guess as the initial guess in lsqnonlin
-T_tank = lsqnonlin(pFunc, T_guess, 0, Inf, optimset('Display', 'off', 'TolFun', 1e-10));
-% Call GetProps with state_input = 2 to force vapor state calculation
-Props = fluid.GetProps(T_tank, rho_tank, 2);
-% Props = fluid.GetProps(T_tank, rho_tank); % Call GetProps without state input
+    pFunc = @(T_unknown) getfield(fluid.GetProps(T_unknown, rho_tank), 'h') - h_tank;
+    % Use T_guess as the initial guess in lsqnonlin
+    T_tank = lsqnonlin(pFunc, T_guess, 0, Inf, optimset('Display', 'off', 'TolFun', 1e-10));
+    % Call GetProps with state_input = 2 to force vapor state calculation
+    Props = fluid.GetProps(T_tank, rho_tank, 2);
+    % Props = fluid.GetProps(T_tank, rho_tank); % Call GetProps without state input
+end
 ```
 
 - 3.2 State postulate에 따라 상태 방정식을 이용해 탱크 전체 상태량 갱신
@@ -207,19 +218,30 @@ Hdot_out = mdot_out * hv;
 H_tank = H_tank - ( Hdot_vent + Hdot_out ) * dt;
 h_tank = H_tank / m_tank;
 
-% Determine initial guess for T_tank
-if isfield(x.tank, 'T') && ~isempty(x.tank.T) && isfinite(x.tank.T)
-    T_guess = x.tank.T; % Use previous step's temperature as initial guess
-else
-    T_guess = 300; % Fallback to 300 K if previous T is not available/valid
+% CoolProp 등 직접 rho-h 플래시 지원 모델이면 온도 역산(lsqnonlin) 대신 내장 플래시 사용
+use_flash = ismethod(fluid, 'GetPropsDH');
+if use_flash
+    Props = fluid.GetPropsDH(rho_tank, h_tank);
+    if Props.state == -1 || ~isfinite(Props.P)
+        warning('Tank_VapFeed:FlashFail', 'GetPropsDH failed (rho=%.4g, h=%.4g). Falling back to lsqnonlin.', rho_tank, h_tank);
+        use_flash = false;
+    end
 end
+if ~use_flash
+    % Determine initial guess for T_tank
+    if isfield(x.tank, 'T') && ~isempty(x.tank.T) && isfinite(x.tank.T)
+        T_guess = x.tank.T; % Use previous step's temperature as initial guess
+    else
+        T_guess = 300; % Fallback to 300 K if previous T is not available/valid
+    end
 
-pFunc = @(T_unknown) getfield(fluid.GetProps(T_unknown, rho_tank), 'h') - h_tank;
-% Use T_guess as the initial guess in lsqnonlin
-T_tank = lsqnonlin(pFunc, T_guess, 0, Inf, optimset('Display', 'off', 'TolFun', 1e-10));
-% Call GetProps with state_input = 2 to force vapor state calculation
-Props = fluid.GetProps(T_tank, rho_tank, 2);
-% Props = fluid.GetProps(T_tank, rho_tank); % Call GetProps without state input
+    pFunc = @(T_unknown) getfield(fluid.GetProps(T_unknown, rho_tank), 'h') - h_tank;
+    % Use T_guess as the initial guess in lsqnonlin
+    T_tank = lsqnonlin(pFunc, T_guess, 0, Inf, optimset('Display', 'off', 'TolFun', 1e-10));
+    % Call GetProps with state_input = 2 to force vapor state calculation
+    Props = fluid.GetProps(T_tank, rho_tank, 2);
+    % Props = fluid.GetProps(T_tank, rho_tank); % Call GetProps without state input
+end
 
 %% Output
 % 상태 변수

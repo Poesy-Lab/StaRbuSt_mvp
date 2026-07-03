@@ -113,8 +113,8 @@ $$
 \dot{m}_{\text{HEM}} = C_{d,\text{inj}} A_{\text{inj}} \cdot G_{\text{HEM}}\big(\max(P_2,\; r_{choke} P_1)\big),
 \qquad r_{choke} = \arg\max_r G_{\text{HEM}}(r P_1)
 $$
-  - $r_{choke}$는 **황금분할 탐색**으로 찾습니다 (단봉 함수). 각 평가는 등엔트로피 상태 1회 해석(lsqnonlin)입니다.
-  - **캐시**: 초크점은 상류 상태 $(P_1, s_1)$만의 함수이므로, 상류가 0.5% 이상 변할 때만 재탐색하고 그 사이에는 직전 결과를 재사용합니다 (연소 모드의 Pc 반복 루프에서는 스텝당 최대 1회 탐색).
+  - $r_{choke}$는 **황금분할 탐색**으로 찾습니다 (단봉 함수). 각 평가는 등엔트로피 상태 1회 해석 — CoolProp 물성 모델이면 내장 P–s 플래시, 인하우스면 lsqnonlin 역산.
+  - **캐시**: 초크점은 상류 상태 $(P_1, s_1)$만의 함수이므로, 상류가 일정 비율(인하우스 0.5%, CoolProp 0.1%) 이상 변할 때만 재탐색하고 그 사이에는 직전 결과를 재사용합니다 (연소 모드의 Pc 반복 루프에서는 스텝당 최대 1회 탐색).
   - **해 검증**: 등엔트로피 솔버는 잔차(무차원화)와 경계 밀착 여부를 검사하여, 가짜 근(예: 밀도 상한에 붙은 액체급 해)이 유량 계산에 쓰이지 않도록 `valid` 플래그로 걸러냅니다.
   - 참고: 포화액 N₂O의 2상 초크점은 통상 $P_2/P_1 \approx 0.7{\sim}0.8$ 부근입니다 (2026 수류시험 조건 4.5°C에서 0.75).
 
@@ -250,5 +250,5 @@ x.inj.mdot = mdot_inj;
 # 전체 코드
 전체 구현은 [Inj_FML_LiqFeed.m](Inj_FML_LiqFeed.m) 참조. 위 Input/System/Output 코드에 더해 두 개의 로컬 함수를 포함합니다:
 
-- `FindHEMChokeRatio(fluid, P1, s1, h1, guessT, guessRho)` — HEM 질량 플럭스 최대점(2상 초크점) 압력비를 황금분할 탐색으로 찾고, 상류 상태 $(P_1, s_1)$가 직전 호출 대비 0.5% 이내면 캐시(persistent)를 재사용. 유효한 결과만 캐시에 저장.
-- `SolveIsentropicState(fluid, P_target, s_target, guessT, guessRho)` — 목표 압력까지의 등엔트로피 상태를 lsqnonlin으로 계산 (`InjState_LiqFeed`와 동일 방식). 잔차를 무차원화하여 P/s 스케일 차이를 보정하고, 잔차가 크거나 해가 탐색 경계(밀도 상한 등)에 붙으면 `valid = false`로 표시하여 가짜 근을 걸러냄.
+- `FindHEMChokeRatio(fluid, P1, s1, h1, guessT, guessRho)` — HEM 질량 플럭스 최대점(2상 초크점) 압력비를 황금분할 탐색으로 찾고, 상류 상태 $(P_1, s_1)$가 직전 호출 대비 허용 오차(인하우스 0.5%, CoolProp 0.1%) 이내면 캐시(persistent)를 재사용. 유효한 결과만 캐시에 저장.
+- `SolveIsentropicState(fluid, P_target, s_target, guessT, guessRho)` — 목표 압력까지의 등엔트로피 상태 계산. CoolProp 물성 모델이면 내장 P–s 플래시(`GetPropsPS`)를 사용하고(가짜 근 원천 차단), 인하우스면 lsqnonlin 역산(`InjState_LiqFeed`와 동일 방식)에 잔차 무차원화 + 해 검증(잔차/경계 밀착 감지)을 적용하여 가짜 근을 걸러냄.

@@ -8,6 +8,7 @@ Author: SRS 33기 박호진
 - `InjState_LiqFeed.m`은 **탱크에서 액체 상의 유출이 일어날 때, 인젝터 출구 상태**의 계산을 수행하는 함수이다.
 - **등엔트로피 조건**으로 계산을 수행한다.
 - 인젝터 입구가 탱크 출구에 바로 연결되어있다는 조건을 적용하였다. (배관 라인 무시)
+- 물성 모델이 **CoolProp**(`u.tank.prop_model`)이면 lsqnonlin 역산 대신 내장 **P–s 플래시**(`GetPropsPS`)로 하류 상태를 직접 계산한다 (가짜 근 원천 차단, 실패 시 lsqnonlin 폴백).
 
 # Input
 
@@ -40,38 +41,39 @@ geussRho = x.tank.rho_l;
 ```
 
 # System
-- 인젝터 하류(출구)의 상태량 $T_2$와 $\rho_2$를 , 등엔트로피 조건을 적용하여 구한다. 
+- 인젝터 하류(출구) 상태는 **등엔트로피 조건**($s_2 = s_1$, $P = P_{\text{downstream}}$)으로 결정한다.
+- **CoolProp 경로 (직접 플래시)**: 물성 모델이 P–s 플래시를 지원하면 내장 플래시로 상태를 한 번에 계산한다. 실패 시 lsqnonlin으로 폴백.
+```MATLAB
+use_flash = ismethod(fluid, 'GetPropsPS');
+if use_flash
+    Props = fluid.GetPropsPS(P_downstream, s1);
+    if Props.state == -1 || ~isfinite(Props.rho)
+        warning('InjState_LiqFeed:FlashFail', 'GetPropsPS failed (P=%.4g Pa). Falling back to lsqnonlin.', P_downstream);
+        use_flash = false;
+    end
+end
+```
+- **인하우스 경로 (lsqnonlin 역산)**: $T_2, \rho_2$를 비선형 최소제곱으로 역산한 뒤 상태 방정식으로 전체 상태량을 갱신한다.
 $$
-\begin{align*}
 \mathbf{f}(T, \rho) =
 \begin{bmatrix}
-P(T, \rho) - P_c \\
-s_\ell(T, \rho) - s_1
-\end{bmatrix}
-\end{align*}
-$$
-$$
-\begin{align*}
-(T_{2}, \rho_{2}) = \arg \min_{T \geq 0,\ \rho \geq 0} \left\| \mathbf{f}(T, \rho) \right\|^2
-\end{align*}
+P(T, \rho) - P_{\text{downstream}} \\
+s(T, \rho) - s_1
+\end{bmatrix},
+\qquad
+(T_{2}, \rho_{2}) = \arg \min \left\| \mathbf{f}(T, \rho) \right\|^2
 $$
 ```MATLAB
-pFunc = @(v) [ getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream;
-getfield(fluid.GetProps(v(1), v(2)), 's_l') - s1 ];
-v = lsqnonlin(pFunc, [geussT, geussRho], [0, 0], [Inf, Inf], optimset('Display', 'off', 'TolFun', 1e-14));
-T2 = v(1); 
-rho2 = v(2); 
-```
-
-- 3.2 State postulate에 따라 상태 방정식을 이용해 인젝터 하류 전체 상태량 갱신
-$$
-\mathbf{X} = \left[ P,\ T,\ \chi,\ \rho,\ h,\ s,\ ... \right]^T
-$$
-$$
-\mathbf{X}_{inj}=\textbf{GetProps}(T_{2}, \rho_{2})
-$$
-```MATLAB
-Props = fluid.GetProps(T2, rho2);
+if ~use_flash
+    pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream);
+                   (getfield(fluid.GetProps(v(1), v(2)), 's') - s1) ];
+    lb = [183, 2.7];
+    ub = [309, 1236];
+    v = lsqnonlin(pFunc, [geussT, geussRho], lb, ub, optimset('Display', 'off', 'TolFun', 1e-10));
+    T2 = v(1);
+    rho2 = v(2);
+    Props = fluid.GetProps(T2, rho2, 1);
+end
 ```
 
 # Output
@@ -156,18 +158,31 @@ geussT = x.tank.T;
 geussRho = x.tank.rho_l;
 
 %% System
-% 엔트로피 오차에 가중치 부여 -> 제거
-pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream);
-			   (getfield(fluid.GetProps(v(1), v(2)), 's') - s1) ];
+% CoolProp 등 직접 P-s 플래시를 지원하는 물성 모델이면 내장 플래시 사용
+% (lsqnonlin 역산 불필요, 돔 내부 가짜 근 원천 차단)
+use_flash = ismethod(fluid, 'GetPropsPS');
+if use_flash
+    Props = fluid.GetPropsPS(P_downstream, s1);
+    if Props.state == -1 || ~isfinite(Props.rho)
+        warning('InjState_LiqFeed:FlashFail', 'GetPropsPS failed (P=%.4g Pa). Falling back to lsqnonlin.', P_downstream);
+        use_flash = false;
+    end
+end
 
-% 솔버 초기 추정값으로 탱크의 온도와 액상 밀도를 사용 (InjState_VapFeed.m 형식 참고)
-lb = [183, 2.7];
-ub = [309, 1236];
-v = lsqnonlin(pFunc, [geussT, geussRho], lb, ub, optimset('Display', 'off', 'TolFun', 1e-10));
-T2 = v(1); 
-rho2 = v(2); 
+if ~use_flash
+    % 엔트로피 오차에 가중치 부여 -> 제거
+    pFunc = @(v) [ (getfield(fluid.GetProps(v(1), v(2)), 'P') - P_downstream);
+                   (getfield(fluid.GetProps(v(1), v(2)), 's') - s1) ];
 
-Props = fluid.GetProps(T2, rho2, 1);
+    % 솔버 초기 추정값으로 탱크의 온도와 액상 밀도를 사용 (InjState_VapFeed.m 형식 참고)
+    lb = [183, 2.7];
+    ub = [309, 1236];
+    v = lsqnonlin(pFunc, [geussT, geussRho], lb, ub, optimset('Display', 'off', 'TolFun', 1e-10));
+    T2 = v(1);
+    rho2 = v(2);
+
+    Props = fluid.GetProps(T2, rho2, 1);
+end
 
 %% Output
 % 상태 변수
