@@ -14,8 +14,7 @@ function GenMatResults(y, input_filename_base) % <<< 파일 기본 이름을 인
 fprintf('\n--- Generating Simulation Result .mat Files (Base: %s) ---\n', input_filename_base);
 
 % --- Setup Output Directory ---
-output_dir = 'Mat_Data'; % Fixed output directory name <-- 상대 경로로 수정
-% output_dir = 'C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Mat_Data'; % 사용자가 요청한 절대 경로로 수정 <-- 기존 절대 경로 주석 처리
+output_dir = fullfile('Mat_Data', input_filename_base); % 실행(config)별 하위 폴더에 저장
 
 % Create the output directory if it doesn't exist
 if ~exist(output_dir, 'dir')

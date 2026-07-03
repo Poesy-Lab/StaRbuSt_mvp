@@ -18,13 +18,15 @@ addpath(genpath('Output'));     % Add output functions to path
 addpath(genpath('Config'));     % Add config functions and file path
 
 % --- Load Input Configuration ---
-config_filepath = fullfile('Config', config_file_to_load); % 전체 경로 생성
-fprintf('Loading input configuration from %s...\n', config_filepath);
-if exist(config_filepath, 'file')
-    load(config_filepath, 'u', 'unit'); % 전체 경로 사용
+% Config/ 하위 폴더(2025_campaign, archive_2018-2024 등)까지 재귀 검색
+config_search = dir(fullfile('Config', '**', config_file_to_load));
+if ~isempty(config_search)
+    config_filepath = fullfile(config_search(1).folder, config_search(1).name);
+    fprintf('Loading input configuration from %s...\n', config_filepath);
+    load(config_filepath, 'u', 'unit');
     fprintf('Input configuration loaded.\n');
 else
-    error('Input configuration file not found: %s\nPlease ensure the file exists in the Config directory and Save_Input_Config.m was run.', config_filepath);
+    error('Input configuration file not found: %s\nPlease ensure the file exists under the Config directory (subfolders included) and Save_Input_Config.m was run.', config_file_to_load);
 end
 % --- End Load Input Configuration ---
 

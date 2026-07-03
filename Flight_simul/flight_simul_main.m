@@ -9,8 +9,9 @@ global TMS_Thrust % <<< Excel 파일에서 로드한 추력 데이터를 위한 
 
 param=flight_param();
 constant=flight_constant();
-TMS_Thrust=readmatrix("C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\hybrid_tms_thrust.xlsx"); % <<< Excel 파일 로딩 활성화
-% TMS_Thrust=readmatrix("C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\NOSHIRO_고흥_고체로켓 추력 DATA_new.xlsx"); % <<< Excel 파일 로딩 활성화
+flight_simul_dir = fileparts(mfilename('fullpath')); % 이 스크립트 위치 기준 상대 경로
+TMS_Thrust=readmatrix(fullfile(flight_simul_dir, "hybrid_tms_thrust.xlsx")); % <<< Excel 파일 로딩 활성화
+% TMS_Thrust=readmatrix(fullfile(flight_simul_dir, "NOSHIRO_고흥_고체로켓 추력 DATA_new.xlsx")); % <<< Excel 파일 로딩 활성화
 actual_burn_duration_main = TMS_Thrust(end,1); % <<< 실제 연소 종료 시간 저장
 
 % % <<< 새로운 .mat 파일 로딩 시작 (주석 처리)\

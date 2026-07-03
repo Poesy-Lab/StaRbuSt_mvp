@@ -8,7 +8,10 @@ clear; clc; close all;
 
 %% 1. 사용자 설정
 % .mat 파일을 검색할 경로를 지정합니다.
-target_dir = 'C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\TMS_Data\TMS_Data';
+% 주의: TMS 원시 계측 데이터(가공 .mat 포함)는 용량 문제로 저장소에서 제외되어
+%       old_ver 아카이브에만 존재합니다 (README.md 참고).
+target_dir = fullfile(fileparts(mfilename('fullpath')), '..', 'old_ver', ...
+    'StaRbuSt-Simulatrion(MATLAB)', 'TMS_Data', 'TMS_Data');
 
 fprintf('지정된 경로: %s\n\n', target_dir);
 

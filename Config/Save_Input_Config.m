@@ -174,8 +174,8 @@ else
     end
 end
 
-% 스크립트가 이미 Config 폴더에 있으므로 경로명 없이 파일 이름만 사용
-config_filename = config_filename_part;
+% 실행 위치(cwd)와 무관하게 항상 이 스크립트가 있는 Config 폴더에 저장
+config_filename = fullfile(fileparts(mfilename('fullpath')), config_filename_part);
 
 fprintf('Saving input configuration to %s...\n', config_filename);
 try

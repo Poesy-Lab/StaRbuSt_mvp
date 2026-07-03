@@ -10,13 +10,17 @@ try
     % =================================================================
     fprintf('\n--- 추력 데이터 처리 시작 ---\n');
 
+    % 경로는 이 스크립트 위치 기준 상대 경로로 설정 (Mat_Data는 실행별 하위 폴더 구조)
+    script_dir = fileparts(mfilename('fullpath'));
+    mat_data_dir = fullfile(script_dir, '..', 'Mat_Data');
+
     % .mat 파일 경로 설정
-    thrust_data_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Mat_Data\2025_SRS_Hybrid_Oneshot_Cd38_output_Nozzle_Thrust_vs_Time.mat";
-    % thrust_data_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Mat_Data\2025_SRS_Hybrid_Oneshot_Cd38_secondrun_beta_output_Nozzle_Thrust_vs_Time.mat";
+    thrust_data_path = fullfile(mat_data_dir, '2025_SRS_Hybrid_Oneshot_Cd38', '2025_SRS_Hybrid_Oneshot_Cd38_output_Nozzle_Thrust_vs_Time.mat');
+    % thrust_data_path = fullfile(mat_data_dir, '2025_SRS_Hybrid_Oneshot_Cd38_secondrun_beta', '2025_SRS_Hybrid_Oneshot_Cd38_secondrun_beta_output_Nozzle_Thrust_vs_Time.mat');
 
     % 저장할 파일 경로 (Excel 및 CSV)
-    excel_thrust_output_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\hybrid_tms_thrust.xlsx";
-    csv_thrust_output_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\hybrid_tms_thrust.csv";
+    excel_thrust_output_path = fullfile(script_dir, 'hybrid_tms_thrust.xlsx');
+    csv_thrust_output_path = fullfile(script_dir, 'hybrid_tms_thrust.csv');
 
     fprintf('선택된 추력 데이터 파일: %s\n', thrust_data_path);
 
@@ -101,11 +105,11 @@ try
         fprintf('유의미한 추력 시작 시간을 찾지 못했으므로, 질량 유량 처리를 건너뜁니다.\n');
     else
         % .mat 파일 경로 설정
-        mdot_data_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Mat_Data\2025_SRS_Hybrid_Oneshot_Cd5_output_Comb_Mdot_vs_Time.mat";
+        mdot_data_path = fullfile(mat_data_dir, '2025_SRS_Hybrid_Oneshot_Cd5', '2025_SRS_Hybrid_Oneshot_Cd5_output_Comb_Mdot_vs_Time.mat');
 
         % 저장할 파일 경로 (Excel 및 CSV)
-        excel_mdot_output_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\hybrid_tms_mdot.xlsx";
-        csv_mdot_output_path = "C:\Users\sitra\Desktop\Projects\2상 유동 시뮬레이션\StaRbuSt-Simulatrion(MATLAB)\Flight_simul\hybrid_tms_mdot.csv";
+        excel_mdot_output_path = fullfile(script_dir, 'hybrid_tms_mdot.xlsx');
+        csv_mdot_output_path = fullfile(script_dir, 'hybrid_tms_mdot.csv');
         
         fprintf('선택된 질량 유량 데이터 파일: %s\n', mdot_data_path);
         
