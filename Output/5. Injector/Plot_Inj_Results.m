@@ -24,6 +24,9 @@ tabGroup = uitabgroup(fig, 'Position', [20, 20, 660, 460]);
 % Define axes position
 axesPosition = [0.07, 0.12, 0.88, 0.8];
 
+% 데이터 존재 여부로 모델별 탭 표시 결정 (기록이 전부 NaN이면 해당 모델 미사용)
+has_data = @(f) isfield(y, 'inj') && isfield(y.inj, f) && any(~isnan(y.inj.(f)));
+
 % -- Tab 1: Mass Flow Rates (Total & NHNE) -- % Combined Mdot
 try
     tabMdotComb = uitab(tabGroup, 'Title', 'Mass Flow Rates (Total & NHNE)');
@@ -141,13 +144,26 @@ catch ME
     warning('Plot_Inj_Results:RatioP', 'Could not plot injector pressure ratio: %s', ME.message);
 end
 
-% -- Tab 14: Kappa (NHNE) -- % Renumbered from 14
-try
-    tabKappa = uitab(tabGroup, 'Title', 'Kappa (NHNE)');
-    axKappa = uiaxes(tabKappa, 'Units', 'normalized', 'Position', axesPosition);
-    Plot_Inj_Kappa_t(axKappa, y);
-catch ME
-    warning('Plot_Inj_Results:Kappa', 'Could not plot injector kappa: %s', ME.message);
+% -- Tab 14: Kappa (NHNE) -- NHNE 모델 사용 시에만 표시
+if has_data('kappa')
+    try
+        tabKappa = uitab(tabGroup, 'Title', 'Kappa (NHNE)');
+        axKappa = uiaxes(tabKappa, 'Units', 'normalized', 'Position', axesPosition);
+        Plot_Inj_Kappa_t(axKappa, y);
+    catch ME
+        warning('Plot_Inj_Results:Kappa', 'Could not plot injector kappa: %s', ME.message);
+    end
+end
+
+% -- Tab 14b: Void Fraction (FML) -- FML 모델 사용 시에만 표시
+if has_data('alpha2')
+    try
+        tabAlpha2 = uitab(tabGroup, 'Title', 'Void Fraction (FML)');
+        axAlpha2 = uiaxes(tabAlpha2, 'Units', 'normalized', 'Position', axesPosition);
+        Plot_Inj_Alpha2_t(axAlpha2, y);
+    catch ME
+        warning('Plot_Inj_Results:Alpha2', 'Could not plot FML void fraction: %s', ME.message);
+    end
 end
 
 % -- Tab 15: Injector Pressure Drop -- %

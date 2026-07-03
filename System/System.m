@@ -26,9 +26,7 @@ fields_to_log = {...
              'h', 'h_v', 'h_l', ...
              'cp', 'cp_v', 'cp_l', ...
              'cv', 'cv_v', 'cv_l', ...
-             'H', 'S', 'rho_v', 'rho_l', ...
-             'kappa', 'mdot_inc', 'mdot_HEM', ...
-             'ratio_Pcr', 'ratio_P'}, ...
+             'H', 'S', 'rho_v', 'rho_l'}, ...
     'vent', {'mdot', 'ratio_Pcr', 'ratio_P'}, ...
     'inj',  {'mdot', 'P', 'T', 'rho', 'state', 'X', ...
              'u', 'u_v', 'u_l', ...
@@ -38,6 +36,7 @@ fields_to_log = {...
              'cv', 'cv_v', 'cv_l', ...
              'rho_v', 'rho_l', ...
              'kappa', 'mdot_inc', 'mdot_HEM', ...
+             'alpha2', 'S_slip', 'n_isen', 'choked', 'mdot_SPC', ...
              'ratio_Pcr', 'ratio_P'}, ...
     'fuel', {'Gox', 'rdot', 'mdot', 'R_out', 'R', 'Ap', 'Ab', 'dR_m'}, ...
     'comb', {'mdot', 'OF', 'cstar', 'P', 'T', 'eta', 'fac_CR', 'Pinj', 'mw', 'gamma', 'rho_c', 'SoS_c', 'R_specific', 'Mach_c', 'Vc', 'f_L1', 'f_L2', 'f_H_pre_chamber', 'f_H_overall', 'f_HL'}, ...
@@ -213,6 +212,9 @@ for k = 1:num_steps
                                                       fprintf('Warning (Field %s.%s): Not enough distinct time values in history to extrapolate. Keeping original k value.\n', component_name, field_name);
                                                       x.(component_name).(field_name) = original_x.(component_name).(field_name); % Revert to original
                                                  end
+                                             elseif isempty(valid_field_time_indices)
+                                                 % 이력이 전부 NaN = 이번 실행에서 미사용 필드 (예: FML 실행의 kappa) -> 경고 없이 원래 값 유지
+                                                 x.(component_name).(field_name) = original_x.(component_name).(field_name);
                                              else
                                                  fprintf('Warning (Field %s.%s): Not enough valid (time, field) pairs (found %d) to extrapolate. Keeping original k value.\n', component_name, field_name, length(valid_field_time_indices));
                                                  x.(component_name).(field_name) = original_x.(component_name).(field_name); % Revert to original
@@ -264,16 +266,39 @@ for k = 1:num_steps
             % Set unused outputs for VapFeed phase if necessary
             x = set_unused_outputs(x, 'VapFeed');
 
-            % --- Explicitly set NHNE components to 0 during VapFeed ---
+            % --- 액상 전용 모델 진단값이 증기 구간 기록에 남지 않도록 정리 ---
             if isfield(x, 'inj') % Check if inj struct exists
+                % NHNE(액상 전용) 성분은 증기 구간에서 항상 비활성
+                if isfield(x.inj, 'kappa')
+                    x.inj.kappa = NaN;
+                end
                 if isfield(x.inj, 'mdot_inc')
                     x.inj.mdot_inc = 0;
                 end
-                if isfield(x.inj, 'mdot_HEM')
-                    x.inj.mdot_HEM = 0;
+                % FML 증기 모델("NHNE" 키워드)은 mdot_HEM/mdot_SPC/alpha2 등을
+                % 매 스텝 직접 계산하므로 유지하고, ICF/CdA 증기 모델일 때만 정리
+                if ~contains(x.inj.model_VapFeed, "NHNE", "IgnoreCase", true)
+                    if isfield(x.inj, 'mdot_HEM')
+                        x.inj.mdot_HEM = 0;
+                    end
+                    if isfield(x.inj, 'mdot_SPC')
+                        x.inj.mdot_SPC = 0;
+                    end
+                    if isfield(x.inj, 'alpha2')
+                        x.inj.alpha2 = NaN;
+                    end
+                    if isfield(x.inj, 'S_slip')
+                        x.inj.S_slip = NaN;
+                    end
+                    if isfield(x.inj, 'n_isen')
+                        x.inj.n_isen = NaN;
+                    end
+                    if isfield(x.inj, 'choked')
+                        x.inj.choked = NaN;
+                    end
                 end
             end
-            % --- End setting NHNE components ---
+            % --- End 액상 전용 진단값 정리 ---
 
         catch ME
             fprintf(2, '\nERROR in VapFeed at t=%.2f s: %s. Stopping simulation.\n', time_current, ME.message); % Use fprintf(2,...) for errors
@@ -468,7 +493,8 @@ function x = set_unused_outputs(x, phase)
             % Injector state might be calculated even in PreFeed if needed later?
             % Assuming only flow rates are zero/NaN in PostRun
             % Remove 'T' from inj list to keep ambient temp during PreFeed
-            fields_to_nan.inj = {'mdot', 'P', 'rho', 'state', 'X', 'h', 's', 'kappa', 'mdot_inc', 'mdot_HEM'}; 
+            fields_to_nan.inj = {'mdot', 'P', 'rho', 'state', 'X', 'h', 's', 'kappa', 'mdot_inc', 'mdot_HEM', ...
+                                 'alpha2', 'S_slip', 'n_isen', 'choked', 'mdot_SPC'}; % NHNE + FML 진단값
             fields_to_nan.fuel = {'Gox', 'rdot', 'mdot'};
             fields_to_nan.comb = {'mdot', 'OF', 'cstar'}; % Removed eta
             fields_to_nan.nozzle = {'Cf', 'F', 'Isp_sl'}; % Keep F here to default to NaN

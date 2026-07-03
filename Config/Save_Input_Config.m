@@ -5,7 +5,7 @@ close all
 u.amb.P = 1;
 unit.amb.P = "bar"; % Pa, MPa, bar, atm, mmHg, psi
 
-u.amb.T = 25;
+u.amb.T = 30;
 unit.amb.T = "°C"; % K, °C, °F, C, F
 
 u.amb.g = 9.80665;
@@ -16,10 +16,10 @@ unit.amb.g = "m/s^2"; % m/s^2, ft/s^2
 u.tank.d = 90;
 unit.tank.d = "mm"; % m, mm, cm, in
 
-u.tank.h = 280;
+u.tank.h = 200;
 unit.tank.h = "mm"; % m, mm, cm, in
 
-u.tank.m = 1.3; % 탱크 내부 산화제 총 질량
+u.tank.m = 0.9; % 탱크 내부 산화제 총 질량
 unit.tank.m = "kg"; % kg, g, lb, oz
 
 u.tank.T = 20;
@@ -46,13 +46,13 @@ u.inj.d = 1.4;
 unit.inj.d = "mm"; % m, mm, cm, in
 
 u.inj.n = 14; % 인젝터 개수
-u.inj.Cd = 0.38; % 토출계수
+u.inj.Cd = 0.5; % 토출계수
 
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
 
-u.inj.model_LiqFeed = "NHNE(Non-Homogeneous Non-Equilibrium Flow)"; % NHNE, CdA, FML(보이드율 가중, La Luna 2022)
-u.inj.model_VapFeed = "ICF(Isentropic Choked Flow)"; % ICF, CdA, NHNE(FML 증기상, La Luna 2022)
+u.inj.model_LiqFeed = "FML(Void-Fraction Weighted, La Luna 2022)"; % NHNE, CdA, FML(보이드율 가중, La Luna 2022)
+u.inj.model_VapFeed = "NHNE(FML Vapor Draining, La Luna 2022)"; % ICF, CdA, NHNE(FML 증기상, La Luna 2022)
 
 %% Sub injector
 % u.subinj.A = 0.2;
@@ -67,10 +67,10 @@ u.subinj.Cd = 0.38; % 토출계수
 u.subinj.L = 7; % 인젝터 플레이트 두께
 unit.subinj.L = "mm"; % m, mm, cm, in
 
-u.subinj.model_LiqFeed = "NHNE(Non-Homogeneous Non-Equilibrium Flow)"; % NHNE, CdA
-u.subinj.model_VapFeed = "ICF(Isentropic Choked Flow)"; % ICF, CdA
+u.subinj.model_LiqFeed = "FML(Void-Fraction Weighted, La Luna 2022)"; % NHNE, CdA
+u.subinj.model_VapFeed = "NHNE(FML Vapor Draining, La Luna 2022)"; % ICF, CdA
 
-u.subinj.mode = 1; % 0: 서브 인젝터 없음, 1: 서브 인젝터 있음
+u.subinj.mode = 0; % 0: 서브 인젝터 없음, 1: 서브 인젝터 있음
 
 %% Fuel
 u.fuel.card = "HDPE"; % HDPE, HTPB, Paraffin
@@ -98,7 +98,7 @@ u.fuel.n = 0.48;
 u.fuel.model = "aGn"; % 사용할 그레인 후퇴율 모델 선택 (현재는 "aGn"만 유효)
 
 %% Combustion Chamber
-u.comb.eta = 0.7; % 특성속도 효율 (0~1)
+u.comb.eta = 0.9; % 특성속도 효율 (0~1)
 
 u.comb.R_comb = 35; % 주의: 연소실 반경임.
 unit.comb.R_comb = "mm"; % m, mm, cm, in
