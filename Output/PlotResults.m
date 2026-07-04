@@ -49,6 +49,20 @@ catch ME
     warning('PlotResults:VentPlotsFailed', 'Could not generate vent port plots: %s', ME.message);
 end
 
+% --- Feed Line Plots ---
+% Calls Plot_Feed_Results (급기 라인 사용 시에만; 직결 모드에서는 데이터가 전부 NaN)
+try
+    if isfield(y, 'feed') && isfield(y.feed, 'P_out') && any(~isnan(y.feed.P_out))
+        fprintf('Generating Feed Line Plots...\n');
+        Plot_Feed_Results(y);
+        fprintf('Feed line plots generated successfully.\n');
+    else
+        fprintf('Skipping Feed Line plots: No feed line data (direct-connection mode).\n');
+    end
+catch ME
+    warning('PlotResults:FeedPlotsFailed', 'Could not generate feed line plots: %s', ME.message);
+end
+
 % --- Injector Plots ---
 % Calls Plot_Inj_Results which creates a tabbed figure for injector parameters
 try
