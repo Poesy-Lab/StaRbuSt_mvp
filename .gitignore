@@ -14,5 +14,12 @@ slprj/
 *.lvm
 *_cache.mat
 
+# 대용량 시험 데이터/문헌 원문 (로컬 보관, 저장소 제외 - 요약 md/결과 PNG는 유지)
+docs/paper/*.pdf
+docs/paper/**/*.pdf
+docs/시험 정보/**/raw_data/
+docs/시험 정보/**/*_processed.xlsx
+TMS_Data/TMS_data_plot/
+
 # Obsidian 로컬 설정
 .obsidian/
