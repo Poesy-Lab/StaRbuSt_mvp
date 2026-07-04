@@ -93,6 +93,11 @@ if x.test.mode == 1 % --- Combustion Test Mode Calculations ---
         Pc_next_iter = Pc_old + RELAX_PC * (Pc_new - Pc_old);
         x_iter.comb.P = Pc_next_iter;
 
+        % Pinj도 이완된 Pc와 일관되게 갱신 (LiqFeed와 동일 - 초크 경계 발산 방지)
+        if isfinite(x_iter.comb.Pinj) && x_iter.comb.Pinj > 0
+            x_iter.comb.Pinj = (x_iter.comb.Pinj / Pc_new) * Pc_next_iter;
+        end
+
     end % End of Pc iteration loop
 
     % Check if Pc solver converged

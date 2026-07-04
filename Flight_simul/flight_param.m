@@ -1,4 +1,8 @@
-function out = flight_param()
+function out = flight_param(override)
+%flight_param  비행 시뮬 기체/공력 파라미터 (persistent)
+%   flight_param()          % 현재 파라미터 반환 (최초 호출 시 기본값 생성)
+%   flight_param(override)  % 파라미터 주입 (헤드리스 러너용, 이후 호출부터 적용)
+%   override에 없는 필드는 기본값을 유지한다.
 
 persistent param
 
@@ -12,8 +16,8 @@ if isempty(param)
     % param.ISP = 200;
     % param.burn_time = 1000; % 실제 연소 시간은 TMS_Thrust에서 파생됨
     % param.mass_rate = 0.3; % 실제 질량 변화율은 effective_mass_rate 사용
-   % param.propulsion_mass = param.mass_rate*param.burn_time; 
-    param.propulsion_mass = 1.4; 
+   % param.propulsion_mass = param.mass_rate*param.burn_time;
+    param.propulsion_mass = 1.4;
     param.total_mass = 15;
     param.diameter=0.110;
     param.ref_area = pi*param.diameter^2/4;
@@ -23,6 +27,14 @@ if isempty(param)
     param.rail_h=5;
 end
 
+if nargin > 0 && ~isempty(override)
+    fn = fieldnames(override);
+    for i = 1:numel(fn)
+        param.(fn{i}) = override.(fn{i});
+    end
+    param.ref_area = pi*param.diameter^2/4; % 직경 변경 시 기준 면적 갱신
+end
+
 out = param;
-    
+
 end

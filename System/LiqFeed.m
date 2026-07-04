@@ -95,6 +95,13 @@ if x.test.mode == 1 % --- Combustion Test Mode Calculations ---
         Pc_next_iter = Pc_old + RELAX_PC * (Pc_new - Pc_old);
         x_iter.comb.P = Pc_next_iter;
 
+        % Pinj도 이완된 Pc와 일관되게 갱신 (Pinj = ratio * Pc)
+        % 인젝터가 읽는 하류압(Pinj)을 무감쇠로 두면 초크 경계 부근에서
+        % (dmdot/dPinj 큰 비초크 분기) 고정점 반복이 발산할 수 있다.
+        if isfinite(x_iter.comb.Pinj) && x_iter.comb.Pinj > 0
+            x_iter.comb.Pinj = (x_iter.comb.Pinj / Pc_new) * Pc_next_iter;
+        end
+
     end % End of Pc iteration loop
 
     % Check if Pc solver converged
