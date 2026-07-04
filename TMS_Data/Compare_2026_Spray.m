@@ -43,7 +43,7 @@ tr_s = y.time - t_run;
 %% 겹침 플롯
 fig = figure('Name', sprintf('2026 Spray Test %d vs Simulation', test_id), ...
              'Position', [100 100 900 850], 'Color', 'w');
-tl = [-0.5, min(max(tr_t), max(tr_s)) + 0.3];
+tl = [-0.5, min([max(tr_t), max(tr_s), 8]) + 0.3]; % 8초 캡 (증기 꼬리가 길어도 핵심 구간 유지)
 
 subplot(3, 1, 1);
 plot(tr_t, mdot_t, 'k-', 'LineWidth', 1.8); hold on;

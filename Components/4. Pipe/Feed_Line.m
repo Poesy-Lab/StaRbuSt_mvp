@@ -1,5 +1,5 @@
-function [out] = Feed_Line(x, mdot)
-%Feed_Line  급기 라인 (P,h) 균질류 행진 모델 - 액상 유출 전용
+function [out] = Feed_Line(x, mdot, phase)
+%Feed_Line  급기 라인 (P,h) 균질류 행진 모델 - 액상/증기상 유출
 %   경로: 탱크 출구(입구손실) -> 플렉시블(주름 마찰 배수, 벤드) -> 파이프1
 %         -> 볼밸브(2상 무회복 K) -> 파이프2(인젝터 전방)
 %   - 균질류 + Dukler 2상 점도 + Nikuradse 마찰: Tada et al. 2024가 자가가압 N2O
@@ -11,6 +11,9 @@ function [out] = Feed_Line(x, mdot)
 %   요구 사항: CoolProp 물성 모델 (u.tank.prop_model = "CoolProp")
 %
 %   입력:  x (시뮬 상태), mdot [kg/s] (가정 유량 - 결합 루프에서 반복 호출됨)
+%          phase: 'liq'(기본, h = 탱크 액상 h) 또는 'vap'(h = 탱크 증기 h)
+%          증기상: 등엔탈피 스로틀링으로 출구가 약과열 증기가 될 수 있으나,
+%          지렛대 클램프(X<=1)로 포화증기 물성으로 근사 (밀도 오차 수 % 이내)
 %   반환:  out.ok      계산 성공 여부 (false: 해당 유량이 라인을 통과 불가)
 %          out.P_out   라인 출구(인젝터 전방) 압력 [Pa]
 %          out.h_out   라인 출구 비엔탈피 [J/kg] (= 탱크 액상 h, 보존)
@@ -18,9 +21,16 @@ function [out] = Feed_Line(x, mdot)
 %          out.rho_out 라인 출구 혼합 밀도 [kg/m^3]
 %          out.dP_line 라인 총 압력손실 [Pa]
 
+if nargin < 3
+    phase = 'liq';
+end
 fluid = x.fluid;
 fd = x.feed;
-h1 = x.tank.h_l; % 액상 유출 (단열 라인 -> h 보존)
+if strcmpi(phase, 'vap')
+    h1 = x.tank.h_v; % 증기상 유출 (단열 라인 -> h 보존)
+else
+    h1 = x.tank.h_l; % 액상 유출 (단열 라인 -> h 보존)
+end
 P0 = x.tank.P;
 
 out = struct('ok', false, 'P_out', NaN, 'h_out', h1, 'x_out', NaN, ...

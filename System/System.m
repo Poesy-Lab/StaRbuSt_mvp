@@ -515,7 +515,7 @@ function x = set_unused_outputs(x, phase)
              if x.vent.mode == 0
                  fields_to_nan.vent = {'ratio_Pcr', 'ratio_P'};
              end
-             fields_to_nan.feed = {'P_out', 'x_out', 'dP_line'}; % 급기 라인은 액상 유출 전용 (v1)
+             % (급기 라인은 증기상도 지원 - Inj_NHNE_VapFeed가 x.feed.*를 매 스텝 갱신)
              % Add other VapFeed specific NaNs if needed
         % --- Add SprayTest Case ---
         case 'SprayTest' % Set fuel, comb (except P), and nozzle outputs to NaN/0

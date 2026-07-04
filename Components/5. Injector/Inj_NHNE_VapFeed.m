@@ -7,8 +7,17 @@ function [x] = Inj_NHNE_VapFeed(x)
 %     (논문 4.3절의 수치 탐색 방식; SPC 임계비와는 별개의 기준)
 %   선행 조건: InjState_VapFeed가 먼저 호출되어 하류 등엔트로피 상태가
 %   x.inj.*에 준비되어 있어야 함.
+%
+%   급기 라인 결합 (x.feed.mode == 1, CoolProp 물성):
+%   액체 소진 후에도 탱크 포화증기가 같은 라인을 지나므로, 라인 출구 상태
+%   (Feed_Line 증기 행진: h = h_v 보존, 균질 마찰 + 가속 압손)를 상류로 쓰는
+%   유량 이분법으로 결합한다. 상류 s는 (P_out, h_v) 지렛대로 재평가되어 라인
+%   마찰에 의한 엔트로피 생성이 자동 반영된다. 결합 경로의 물성은 포화 테이블
+%   지렛대(핫루프 py 호출 없음), n은 스텝당 탱크 상태에서 1회 평가(라인 압손
+%   수 bar 구간에서 변화 미미).
 
 %% Input
+persistent m_prev_vap % 라인 결합 워밍 스타트 (직전 스텝 유량)
 fluid = x.fluid;
 % P2 = x.comb.P; % 기존 연소실 압력 사용 코드 주석 처리
 P2 = x.comb.Pinj; % 인젝터 후단 압력으로 Pinj 사용
@@ -134,6 +143,56 @@ else
     % alpha2, S_slip, r_choke_HEM은 초기값 NaN 유지
 end
 
+%% Feed line coupling (증기상 라인 결합)
+use_feed = isfield(x, 'feed') && isfield(x.feed, 'mode') && x.feed.mode == 1 ...
+           && ismethod(fluid, 'GetPropsPH');
+P_out_line = x.tank.P; x_out_line = 1; dP_line = 0; % 무유량 기본값
+
+if use_feed && mdot_inj > 0 && deltaP > 0
+    CdA = Cd_inj * A_inj;
+    % 브래킷: 결합 해는 무손실(탱크 직결) 유량 이하 [소량, mdot_직결]
+    m_lo = 1e-5; m_hi = mdot_inj * 1.02;
+    a = m_lo; b = m_hi;
+    if ~isempty(m_prev_vap) && isfinite(m_prev_vap) && m_prev_vap > m_lo
+        aw = max(m_lo, 0.7 * m_prev_vap); bw = min(m_hi, 1.3 * m_prev_vap);
+        if vap_line_resid(x, aw, P2, n_isen, CdA) > 0 && vap_line_resid(x, bw, P2, n_isen, CdA) < 0
+            a = aw; b = bw; % 직전 스텝 주변 워밍 스타트 성공
+        end
+    end
+    ra = vap_line_resid(x, a, P2, n_isen, CdA);
+    rb = vap_line_resid(x, b, P2, n_isen, CdA);
+    if ra > 0 && rb < 0
+        for it = 1:40
+            m_mid = 0.5 * (a + b);
+            if vap_line_resid(x, m_mid, P2, n_isen, CdA) > 0
+                a = m_mid;
+            else
+                b = m_mid;
+            end
+            if (b - a) < 1e-4 * max(b, 1e-6), break; end
+        end
+        m_sol = 0.5 * (a + b);
+        [~, dg] = vap_line_resid(x, m_sol, P2, n_isen, CdA);
+        if dg.ok
+            mdot_inj = m_sol;
+            mdot_SPC = dg.mdot_SPC;
+            mdot_HEM = dg.mdot_HEM;
+            alpha2 = dg.alpha2;
+            S_slip = dg.S_slip;
+            hem_choked = dg.hem_choked;
+            r_choke_HEM = dg.r_choke;
+            pressure_ratio = P2 / dg.P_out;
+            P_out_line = dg.P_out; x_out_line = dg.x_out; dP_line = dg.dP_line;
+            m_prev_vap = m_sol;
+        end
+    elseif ra <= 0
+        % 라인이 극소 유량도 통과 못 시킴 (말기 저압) -> 유량 0
+        mdot_inj = 0; mdot_SPC = 0; mdot_HEM = 0;
+        m_prev_vap = [];
+    end
+    % rb >= 0 (라인 손실이 무시할 수준): 탱크 직결 값 유지
+end
+
 %% Output
 x.inj.n_isen = n_isen;
 x.inj.ratio_Pcr = critical_pressure_ratio; % SPC 임계 압력비 (식 (11))
@@ -148,6 +207,127 @@ x.inj.mdot_HEM = mdot_HEM;
 % Output the total calculated mass flow rate
 x.inj.mdot = mdot_inj;
 
+% 급기 라인 진단값 (결합 시 갱신, 무유량이면 탱크압/건도1/손실0)
+if use_feed
+    x.feed.P_out = P_out_line;
+    x.feed.x_out = x_out_line;
+    x.feed.dP_line = dP_line;
+end
+
+end
+
+function [r, dg] = vap_line_resid(x, m, P2, n_isen, CdA)
+%vap_line_resid  결합 잔차: (라인 출구 상류로 평가한 FML 유량) - (가정 유량)
+%   라인 통과 불가 시 음수 반환 (이분법이 유량을 낮추는 방향).
+dg = struct('ok', false, 'P_out', NaN, 'x_out', NaN, 'dP_line', NaN, ...
+            'mdot_SPC', NaN, 'mdot_HEM', NaN, 'alpha2', NaN, 'S_slip', NaN, ...
+            'hem_choked', false, 'r_choke', NaN);
+fo = Feed_Line(x, m, 'vap');
+if ~fo.ok
+    r = -max(m, 1e-6);
+    return;
+end
+h1 = x.tank.h_v;
+st = N2O_SatTable(fo.P_out);
+if ~st.ok
+    r = -max(m, 1e-6);
+    return;
+end
+% 라인 출구 상류 상태: (P_out, h_v) 지렛대 -> s1 (마찰 엔트로피 생성 반영)
+Xc = min(max((h1 - st.hl) / max(st.hv - st.hl, eps), 0), 1);
+s1c = st.sl + Xc * (st.sv - st.sl);
+[mdot_c, dgi] = fml_vap_lever(fo.P_out, fo.rho_out, h1, s1c, P2, n_isen, CdA);
+r = mdot_c - m;
+dg = dgi;
+dg.ok = true;
+dg.P_out = fo.P_out; dg.x_out = fo.x_out; dg.dP_line = fo.dP_line;
+end
+
+function [mdot, dg] = fml_vap_lever(P1, rho1, h1, s1, P2, n, CdA)
+%fml_vap_lever  FML 증기상 유량 (식 (23)) - 포화 테이블 지렛대 전용 고속판
+%   SPC: 실기체 n (스텝당 1회 평가값 재사용). HEM: 지렛대 등엔트로피 플럭스의
+%   최대점(초크점) 캡 (황금분할, 순수 MATLAB). 과열 영역은 X<=1 클램프로
+%   포화증기 근사 (증기상 알짜 기여는 alpha2~1로 SPC 지배적).
+dg = struct('ok', true, 'P_out', NaN, 'x_out', NaN, 'dP_line', NaN, ...
+            'mdot_SPC', 0, 'mdot_HEM', 0, 'alpha2', 1, 'S_slip', NaN, ...
+            'hem_choked', false, 'r_choke', NaN);
+rr = min(max(P2 / P1, 1e-6), 1);
+
+% --- SPC (식 (10)/(12)) ---
+if isfinite(n) && n > 1
+    rcr = (2 / (n + 1))^(n / (n - 1));
+    if rr <= rcr
+        term = n * rho1 * P1 * (2 / (n + 1))^((n + 1) / (n - 1));
+    else
+        term = 2 * rho1 * P1 * (n / (n - 1)) * (rr^(2 / n) - rr^((n + 1) / n));
+    end
+else
+    term = 2 * rho1 * max(P1 - P2, 0); % SPI 폴백
+end
+mdot_SPC = CdA * sqrt(max(term, 0));
+
+% --- alpha2: 하류(P2) 등엔트로피 지렛대 상태 + Zivi 슬립 ---
+alpha2 = 1; S_slip = NaN;
+s2t = N2O_SatTable(P2);
+if s2t.ok
+    X2 = (s1 - s2t.sl) / max(s2t.sv - s2t.sl, eps);
+    if X2 <= 0
+        alpha2 = 0;
+    elseif X2 < 1
+        S_slip = (s2t.rhol / s2t.rhov)^(1/3);
+        alpha2 = 1 / (1 + ((1 - X2) / X2) * S_slip * (s2t.rhov / s2t.rhol));
+    end
+end
+
+% --- HEM: 지렛대 플럭스 + 초크 캡 (황금분할) ---
+mdot_HEM = 0; hem_choked = false; r_choke = NaN;
+if alpha2 < 1 - 1e-9 % 전량 증기(alpha2=1)면 HEM 기여 0 -> 탐색 생략
+    phi = (sqrt(5) - 1) / 2;
+    a = 0.30; b = 0.995;
+    x1 = b - phi * (b - a); x2 = a + phi * (b - a);
+    f1 = lever_flux(x1 * P1, s1, h1); f2 = lever_flux(x2 * P1, s1, h1);
+    for it = 1:12
+        if f1 >= f2
+            b = x2; x2 = x1; f2 = f1; x1 = b - phi * (b - a);
+            f1 = lever_flux(x1 * P1, s1, h1);
+        else
+            a = x1; x1 = x2; f1 = f2; x2 = a + phi * (b - a);
+            f2 = lever_flux(x2 * P1, s1, h1);
+        end
+    end
+    if f1 >= f2, r_choke = x1; else, r_choke = x2; end
+    if rr < r_choke
+        hem_choked = true;
+        G = lever_flux(r_choke * P1, s1, h1); % 초크점 캡
+    else
+        G = lever_flux(P2, s1, h1);
+    end
+    if isfinite(G) && G > 0
+        mdot_HEM = CdA * G;
+    end
+end
+
+mdot = alpha2 * mdot_SPC + (1 - alpha2) * mdot_HEM;
+dg.mdot_SPC = mdot_SPC; dg.mdot_HEM = mdot_HEM;
+dg.alpha2 = alpha2; dg.S_slip = S_slip;
+dg.hem_choked = hem_choked; dg.r_choke = r_choke;
+end
+
+function G = lever_flux(Pe, s1, h1)
+%lever_flux  등엔트로피(s=s1) 지렛대 상태의 HEM 질량 플럭스 G = rho2*sqrt(2*(h1-h2))
+st = N2O_SatTable(Pe);
+if ~st.ok
+    G = -Inf;
+    return;
+end
+X = min(max((s1 - st.sl) / max(st.sv - st.sl, eps), 0), 1);
+h2 = st.hl + X * (st.hv - st.hl);
+rho2 = 1 / (X / st.rhov + (1 - X) / st.rhol);
+if h1 > h2 && isfinite(rho2)
+    G = rho2 * sqrt(2 * (h1 - h2));
+else
+    G = -Inf;
+end
 end
 
 function [r_best, state_best] = FindHEMChokeRatioVap(fluid, P1, s1, h1, guessT, guessRho)
