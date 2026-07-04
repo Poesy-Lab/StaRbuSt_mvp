@@ -136,10 +136,12 @@ else % --- Spray Test Mode Calculations (x.test.mode == 2) ---
     if x.comb.P >= x.tank.P % Should not happen if Pc = ambient
         warning('LiqFeed:InjectorBackPressureSpray', 'Ambient Pc (%.2f Pa) >= Tank P (%.2f Pa)? Setting mdot_inj to 0.', x.comb.P, x.tank.P);
         x.inj.mdot = 0;
+    elseif contains(x.inj.model_LiqFeed, "HEMc", "IgnoreCase", true)
+        % HEMc는 InjState 결과/직전 유량에 의존하지 않으므로 항상 호출
+        % (직전 스텝 유량 0에 의한 래치 방지)
+        x = Inj_HEMc_LiqFeed(x); % 2상 입구 HEM_c (+급기 라인 결합, x.feed.mode=1 시)
     elseif isfield(x.inj,'mdot') && x.inj.mdot ~= 0 % Check if not already set to 0 by error above
-        if contains(x.inj.model_LiqFeed, "HEMc", "IgnoreCase", true)
-             x = Inj_HEMc_LiqFeed(x); % 2상 입구 HEM_c (+급기 라인 결합, x.feed.mode=1 시)
-        elseif contains(x.inj.model_LiqFeed, "FML", "IgnoreCase", true)
+        if contains(x.inj.model_LiqFeed, "FML", "IgnoreCase", true)
              x = Inj_FML_LiqFeed(x); % 보이드율 가중 FML 모델 (La Luna et al. 2022, 식 22)
         elseif contains(x.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
              x = Inj_CdA_LiqFeed(x);

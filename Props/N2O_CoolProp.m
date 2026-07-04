@@ -149,21 +149,42 @@ classdef N2O_CoolProp
         end
 
         function Props = GetPropsPH(obj, P, h)
-            %GetPropsPH 압력-엔탈피 직접 플래시 (급기 라인 행진: 단열 라인에서 h 보존)
-            %   실패 시 state = -1 반환 (예외 없음)
+            %GetPropsPH 압력-엔탈피 상태 계산 (급기 라인 행진: 단열 라인에서 h 보존)
+            %   2상 구간은 포화 엔탈피 지렛대로 건도를 직접 결정하여 CoolProp P-H
+            %   플래시의 포화 경계 수렴 실패를 우회한다 (탱크 출구 = 정확히 포화액
+            %   경계라 직접 플래시는 실패할 수 있음). 실패 시 state = -1 반환.
             Props = N2O_CoolProp.emptyProps();
+            % 포화 기준값 (아임계에서 항상 견고)
             try
-                T = obj.cpsi('T', 'P', P, 'H', h);
-                Q = obj.cpsi('Q', 'P', P, 'H', h);
-                if Q >= 0 && Q <= 1
-                    Props = obj.mixtureProps(T, Q);
-                    Props.P = P; % 플래시 입력 압력을 그대로 유지
+                Tsat = obj.cpsi('T', 'P', P, 'Q', 0);
+                hl = obj.cpsi('H', 'P', P, 'Q', 0);
+                hv = obj.cpsi('H', 'P', P, 'Q', 1);
+            catch
+                Tsat = NaN; hl = NaN; hv = NaN; % 초임계 등 -> 단상 경로
+            end
+            try
+                if isfinite(Tsat) && h >= hl && h <= hv
+                    % 2상: 건도 = 엔탈피 지렛대 (P-H 플래시 불필요)
+                    X = (h - hl) / max(hv - hl, eps);
+                    Props = obj.mixtureProps(Tsat, X);
+                    Props.P = P;
                 else
-                    st = obj.queryState('P', P, 'H', h);
+                    st = obj.queryState('P', P, 'H', h); % 단상 (과냉/과열)
                     Props = N2O_CoolProp.singleProps(st, st.rho >= obj.rhoc);
                 end
             catch
-                % state = -1 유지
+                % 단상 플래시가 포화 경계 근처에서 실패한 경우: 경계 상태로 클램프
+                try
+                    if isfinite(Tsat) && h < hl
+                        Props = obj.mixtureProps(Tsat, 0); % 포화액 경계 근사
+                        Props.P = P;
+                    elseif isfinite(Tsat) && h > hv
+                        Props = obj.mixtureProps(Tsat, 1); % 포화증기 경계 근사
+                        Props.P = P;
+                    end
+                catch
+                    % state = -1 유지
+                end
             end
         end
     end
