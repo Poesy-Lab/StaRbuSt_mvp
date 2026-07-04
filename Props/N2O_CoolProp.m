@@ -147,6 +147,25 @@ classdef N2O_CoolProp
                 % state = -1 유지
             end
         end
+
+        function Props = GetPropsPH(obj, P, h)
+            %GetPropsPH 압력-엔탈피 직접 플래시 (급기 라인 행진: 단열 라인에서 h 보존)
+            %   실패 시 state = -1 반환 (예외 없음)
+            Props = N2O_CoolProp.emptyProps();
+            try
+                T = obj.cpsi('T', 'P', P, 'H', h);
+                Q = obj.cpsi('Q', 'P', P, 'H', h);
+                if Q >= 0 && Q <= 1
+                    Props = obj.mixtureProps(T, Q);
+                    Props.P = P; % 플래시 입력 압력을 그대로 유지
+                else
+                    st = obj.queryState('P', P, 'H', h);
+                    Props = N2O_CoolProp.singleProps(st, st.rho >= obj.rhoc);
+                end
+            catch
+                % state = -1 유지
+            end
+        end
     end
 
     methods (Access = private)

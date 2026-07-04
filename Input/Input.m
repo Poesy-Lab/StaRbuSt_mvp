@@ -25,6 +25,11 @@ function [x] = Input(u, unit)
         x.vent = x_part.vent;
     end
 
+    x_part = Init_Feed(u, unit);
+    if isfield(x_part, 'feed')
+        x.feed = x_part.feed;
+    end
+
     x_part = Init_Inj(u, unit);
     if isfield(x_part, 'inj')
         x.inj = x_part.inj;

@@ -40,6 +40,29 @@ u.vent.model = "ICF(Isentropic Choked Flow)"; % ICF, CdA
 u.vent.Cd = 0.1; % 토출계수
 u.vent.mode = 1; % 0: 벤트포트 없음, 1: 벤트포트 있음
 
+%% Feed Line (급기 라인: 탱크 -> 플렉시블 -> 파이프1 -> 볼밸브 -> 파이프2 -> 인젝터)
+u.feed.mode = 1; % 0: 탱크-인젝터 직결(기존 동작), 1: 급기 라인 모델 (CoolProp 물성 + 인젝터 모델 HEMc 필요)
+
+u.feed.K_entrance = 0.5; % 탱크 출구 입구손실 계수
+
+u.feed.flex.d = 6.35; % 플렉시블 내경 (1/4" 보어 호스 가정 - 캘리퍼 실측 확인 권장)
+unit.feed.flex.d = "mm"; % m, mm, cm, in
+u.feed.flex.L = 1.0; % 플렉시블 길이
+unit.feed.flex.L = "m"; % m, mm, cm, in
+u.feed.flex.fmult = 6; % 주름관 마찰 배수 (매끈관=1, 주름관 4~10; 2026 수류시험 교정값)
+u.feed.flex.K_bend = 0.4; % ㄴ자 벤드 부차손실
+
+u.feed.pipe.d = 7.747; % 직관 내경 (3/8" OD x 0.035" wall)
+unit.feed.pipe.d = "mm"; % m, mm, cm, in
+u.feed.pipe.L1 = 50; % 파이프1 (플렉시블-밸브)
+unit.feed.pipe.L1 = "mm"; % m, mm, cm, in
+u.feed.pipe.L2 = 50; % 파이프2 (밸브-인젝터, 압력 계측점)
+unit.feed.pipe.L2 = "mm"; % m, mm, cm, in
+
+u.feed.valve.d_bore = 6.4; % 볼밸브 보어 직경 (DK-Lok VH86B-D-6T)
+unit.feed.valve.d_bore = "mm"; % m, mm, cm, in
+u.feed.valve.Cd_bore = 0.62; % 2상(플래싱) 무회복 오리피스 유량계수
+
 %% Injector
 % u.inj.A = 0.2;
 % unit.inj.A = "mm^2"; % m^2, mm^2, cm^2, in^2
@@ -48,12 +71,12 @@ u.inj.d = 1.4;
 unit.inj.d = "mm"; % m, mm, cm, in
 
 u.inj.n = 28; % 인젝터 개수
-u.inj.Cd = 0.5; % 토출계수
+u.inj.Cd = 0.55; % 토출계수 (HEMc+급기라인 결합 검증값 0.50~0.55; 직결 구성 FML 사용 시 시스템 Cd ~0.3)
 
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
 
-u.inj.model_LiqFeed = "FML(Void-Fraction Weighted, La Luna 2022)"; % NHNE, CdA, FML(보이드율 가중, La Luna 2022)
+u.inj.model_LiqFeed = "HEMc(Two-Phase Inlet HEM Choked)"; % NHNE, CdA, FML(보이드율 가중, 직결용), HEMc(2상 입구 HEM+초크캡, 급기라인 결합)
 u.inj.model_VapFeed = "NHNE(FML Vapor Draining, La Luna 2022)"; % ICF, CdA, NHNE(FML 증기상, La Luna 2022)
 
 %% Sub injector
@@ -64,7 +87,7 @@ u.subinj.d = 1.4;
 unit.subinj.d = "mm"; % m, mm, cm, in
 
 u.subinj.n = 14; % 인젝터 개수
-u.subinj.Cd = 0.38; % 토출계수
+u.subinj.Cd = 0.7; % 토출계수
 
 u.subinj.L = 7; % 인젝터 플레이트 두께
 unit.subinj.L = "mm"; % m, mm, cm, in
@@ -100,7 +123,7 @@ u.fuel.n = 0.48;
 u.fuel.model = "aGn"; % 사용할 그레인 후퇴율 모델 선택 (현재는 "aGn"만 유효)
 
 %% Combustion Chamber
-u.comb.eta = 0.9; % 특성속도 효율 (0~1)
+u.comb.eta = 0.7; % 특성속도 효율 (0~1)
 
 u.comb.R_comb = 35; % 주의: 연소실 반경임.
 unit.comb.R_comb = "mm"; % m, mm, cm, in
@@ -141,7 +164,7 @@ unit.nozzle.alpha = "degree"; % degree, radian
 u.nozzle.theta_e = 15;
 unit.nozzle.theta_e = "degree"; % degree, radian
 
-u.nozzle.eta = 1; % 노즐 효율 (0~1)
+u.nozzle.eta = 0.9; % 노즐 효율 (0~1)
 
 
 %% Time
