@@ -5,16 +5,18 @@ function res = Flight_From_Config(config_base, opts)
 %
 %   추력 곡선: Mat_Data/<config>/<config>_y.mat의 y.nozzle.F (점화 기준 재영점)
 %   추진제 질량: 산화제 적재량(u.tank.m) + 연료 소모량(trapz y.fuel.mdot)
-%   기체/발사대: opts (기본 총중량 14.5 kg, 발사각 80도, 레일 5 m — 재설계 구상.md)
+%   기체/발사대: opts (기본 총중량 14.8 kg, 동체 120 mm, 발사각 85도, 레일 5 m
+%   — 재설계 구상.md 2026-07-04 개정판)
 %   반환: res.apogee, res.v_rail_exit, res.t_rail_exit, res.burn_alt,
 %         res.v_max, res.I_total, res.F_mean, res.t_burn, res.m_prop
 %   프로젝트 루트에서 실행하세요. (플롯/애니메이션 없음)
 
 if nargin < 2, opts = struct(); end
 getopt = @(f, d) get_field(opts, f, d);
-total_mass = getopt('total_mass', 14.5); % 이륙 총중량 [kg]
-elev_deg   = getopt('elev_deg', 80);     % 발사각 [deg]
+total_mass = getopt('total_mass', 14.8); % 이륙 총중량 [kg]
+elev_deg   = getopt('elev_deg', 85);     % 발사각 [deg]
 rail_h     = getopt('rail_h', 5);        % 레일 길이 [m]
+diameter   = getopt('diameter', 0.120);  % 동체 직경 [m]
 
 global TMS_Thrust %#ok<GVMIS>
 
@@ -45,7 +47,7 @@ m_prop = m_ox + m_fuel;
 
 %% 기체 파라미터 주입 + 초기 상태
 flight_param(struct('total_mass', total_mass, 'propulsion_mass', m_prop, ...
-                    'rail_h', rail_h));
+                    'rail_h', rail_h, 'diameter', diameter));
 init_state = [zeros(3,1); zeros(3,1); [0; elev_deg; 90]*pi/180; zeros(3,1)];
 time = 0:0.01:60;
 
