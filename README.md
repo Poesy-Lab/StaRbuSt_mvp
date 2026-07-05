@@ -9,7 +9,7 @@
 지상시험 데이터와 시뮬레이션을 오가며 모터를 설계하는 과정을 담은 프로젝트이고,
 일본 노시로 로켓대회 출전으로 가는 발판이 됐다.
 
-- [SRS 활동 블로그](https://blog.naver.com/wdh3168/223986008141)
+- [2025 일본 노시로 대회 준비기](https://blog.naver.com/wdh3168/223986008141)
 - [KAU SRS 유튜브](https://www.youtube.com/@KAU_SRS_Rocket/videos)
 
 ## 준비물
