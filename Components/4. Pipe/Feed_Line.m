@@ -1,5 +1,5 @@
 function [out] = Feed_Line(x, mdot, phase)
-%Feed_Line  급기 라인 (P,h) 균질류 행진 모델 - 액상/증기상 유출
+%Feed_Line  공급 라인 (P,h) 균질류 행진 모델 - 액상/증기상 유출
 %   경로: 탱크 출구(입구손실) -> 플렉시블(주름 마찰 배수, 벤드) -> 파이프1
 %         -> 볼밸브(2상 무회복 K) -> 파이프2(인젝터 전방)
 %   - 균질류 + Dukler 2상 점도 + Nikuradse 마찰: Tada et al. 2024가 자가가압 N2O
@@ -38,7 +38,7 @@ out = struct('ok', false, 'P_out', NaN, 'h_out', h1, 'x_out', NaN, ...
 
 if ~ismethod(fluid, 'GetPropsPH')
     error('Feed_Line:PropModel', ...
-        '급기 라인 모델은 CoolProp 물성 모델(u.tank.prop_model = "CoolProp")에서만 지원됩니다.');
+        '공급 라인 모델은 CoolProp 물성 모델(u.tank.prop_model = "CoolProp")에서만 지원됩니다.');
 end
 if ~isfinite(mdot) || mdot <= 0
     return;

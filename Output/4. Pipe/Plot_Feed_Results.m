@@ -1,6 +1,6 @@
 function fig = Plot_Feed_Results(y)
 %Plot_Feed_Results Creates a figure with tabs for feed line simulation results.
-%   급기 라인(탱크-인젝터 배관) 결과 탭 창: 라인 압력, 압력손실, 출구 건도.
+%   공급 라인(탱크-인젝터 배관) 결과 탭 창: 라인 압력, 압력손실, 출구 건도.
 %
 % Args:
 %   y (struct): Simulation results structure containing y.time, y.feed, y.tank.

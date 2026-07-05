@@ -8,7 +8,7 @@ function [x] = Inj_NHNE_VapFeed(x)
 %   선행 조건: InjState_VapFeed가 먼저 호출되어 하류 등엔트로피 상태가
 %   x.inj.*에 준비되어 있어야 함.
 %
-%   급기 라인 결합 (x.feed.mode == 1, CoolProp 물성):
+%   공급 라인 결합 (x.feed.mode == 1, CoolProp 물성):
 %   액체 소진 후에도 탱크 포화증기가 같은 라인을 지나므로, 라인 출구 상태
 %   (Feed_Line 증기 행진: h = h_v 보존, 균질 마찰 + 가속 압손)를 상류로 쓰는
 %   유량 이분법으로 결합한다. 상류 s는 (P_out, h_v) 지렛대로 재평가되어 라인
@@ -207,7 +207,7 @@ x.inj.mdot_HEM = mdot_HEM;
 % Output the total calculated mass flow rate
 x.inj.mdot = mdot_inj;
 
-% 급기 라인 진단값 (결합 시 갱신, 무유량이면 탱크압/건도1/손실0)
+% 공급 라인 진단값 (결합 시 갱신, 무유량이면 탱크압/건도1/손실0)
 if use_feed
     x.feed.P_out = P_out_line;
     x.feed.x_out = x_out_line;

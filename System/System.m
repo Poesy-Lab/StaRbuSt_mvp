@@ -502,7 +502,7 @@ function x = set_unused_outputs(x, phase)
             % Remove 'T' from inj list to keep ambient temp during PreFeed
             fields_to_nan.inj = {'mdot', 'P', 'rho', 'state', 'X', 'h', 's', 'kappa', 'mdot_inc', 'mdot_HEM', ...
                                  'alpha2', 'S_slip', 'n_isen', 'choked', 'mdot_SPC', 'ratio_Pcr_HEM', 'x1_in'}; % NHNE + FML + HEMc 진단값
-            fields_to_nan.feed = {'P_out', 'x_out', 'dP_line'}; % 급기 라인 진단값
+            fields_to_nan.feed = {'P_out', 'x_out', 'dP_line'}; % 공급 라인 진단값
             fields_to_nan.fuel = {'Gox', 'rdot', 'mdot'};
             fields_to_nan.comb = {'mdot', 'OF', 'cstar'}; % Removed eta
             fields_to_nan.nozzle = {'Cf', 'F', 'Isp_sl'}; % Keep F here to default to NaN
@@ -515,7 +515,7 @@ function x = set_unused_outputs(x, phase)
              if x.vent.mode == 0
                  fields_to_nan.vent = {'ratio_Pcr', 'ratio_P'};
              end
-             % (급기 라인은 증기상도 지원 - Inj_NHNE_VapFeed가 x.feed.*를 매 스텝 갱신)
+             % (공급 라인은 증기상도 지원 - Inj_NHNE_VapFeed가 x.feed.*를 매 스텝 갱신)
              % Add other VapFeed specific NaNs if needed
         % --- Add SprayTest Case ---
         case 'SprayTest' % Set fuel, comb (except P), and nozzle outputs to NaN/0

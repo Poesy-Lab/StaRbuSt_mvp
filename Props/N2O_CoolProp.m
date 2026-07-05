@@ -149,7 +149,7 @@ classdef N2O_CoolProp
         end
 
         function Props = GetPropsPH(obj, P, h)
-            %GetPropsPH 압력-엔탈피 상태 계산 (급기 라인 행진: 단열 라인에서 h 보존)
+            %GetPropsPH 압력-엔탈피 상태 계산 (공급 라인 행진: 단열 라인에서 h 보존)
             %   2상 구간은 포화 엔탈피 지렛대로 건도를 직접 결정하여 CoolProp P-H
             %   플래시의 포화 경계 수렴 실패를 우회한다 (탱크 출구 = 정확히 포화액
             %   경계라 직접 플래시는 실패할 수 있음). 실패 시 state = -1 반환.

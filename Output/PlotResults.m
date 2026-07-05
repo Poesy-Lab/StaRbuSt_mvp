@@ -50,7 +50,7 @@ catch ME
 end
 
 % --- Feed Line Plots ---
-% Calls Plot_Feed_Results (급기 라인 사용 시에만; 직결 모드에서는 데이터가 전부 NaN)
+% Calls Plot_Feed_Results (공급 라인 사용 시에만; 직결 모드에서는 데이터가 전부 NaN)
 try
     if isfield(y, 'feed') && isfield(y.feed, 'P_out') && any(~isnan(y.feed.P_out))
         fprintf('Generating Feed Line Plots...\n');

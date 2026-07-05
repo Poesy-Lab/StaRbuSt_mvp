@@ -1,7 +1,7 @@
 function [mu_l, mu_v] = N2O_Viscosity(T)
 %N2O_Viscosity  N2O 포화 액체/증기 점도 [Pa s] - ESDU 91022 상관식
 %   인하우스 HelmholtzEOS와 CoolProp 모두 N2O 점도 모델이 없어 별도 함수로 제공.
-%   급기 라인(Feed_Line)의 2상 마찰 계산(Dukler 점도)에 사용.
+%   공급 라인(Feed_Line)의 2상 마찰 계산(Dukler 점도)에 사용.
 %   유효 범위: 삼중점(182.3 K) ~ 임계점 부근.
 Tc = 309.57; % K
 

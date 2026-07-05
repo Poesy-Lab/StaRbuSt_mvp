@@ -60,7 +60,7 @@ if x.test.mode == 1 % --- Combustion Test Mode Calculations ---
             x_iter.inj.mdot = 0;
         else
             if contains(x_iter.inj.model_LiqFeed, "HEMc", "IgnoreCase", true)
-                 x_iter = Inj_HEMc_LiqFeed(x_iter); % 2상 입구 HEM_c (+급기 라인 결합, x.feed.mode=1 시)
+                 x_iter = Inj_HEMc_LiqFeed(x_iter); % 2상 입구 HEM_c (+공급 라인 결합, x.feed.mode=1 시)
             elseif contains(x_iter.inj.model_LiqFeed, "FML", "IgnoreCase", true)
                  x_iter = Inj_FML_LiqFeed(x_iter); % 보이드율 가중 FML 모델 (La Luna et al. 2022, 식 22)
             elseif contains(x_iter.inj.model_LiqFeed, "CdA", "IgnoreCase", true)
@@ -146,7 +146,7 @@ else % --- Spray Test Mode Calculations (x.test.mode == 2) ---
     elseif contains(x.inj.model_LiqFeed, "HEMc", "IgnoreCase", true)
         % HEMc는 InjState 결과/직전 유량에 의존하지 않으므로 항상 호출
         % (직전 스텝 유량 0에 의한 래치 방지)
-        x = Inj_HEMc_LiqFeed(x); % 2상 입구 HEM_c (+급기 라인 결합, x.feed.mode=1 시)
+        x = Inj_HEMc_LiqFeed(x); % 2상 입구 HEM_c (+공급 라인 결합, x.feed.mode=1 시)
     elseif isfield(x.inj,'mdot') && x.inj.mdot ~= 0 % Check if not already set to 0 by error above
         if contains(x.inj.model_LiqFeed, "FML", "IgnoreCase", true)
              x = Inj_FML_LiqFeed(x); % 보이드율 가중 FML 모델 (La Luna et al. 2022, 식 22)

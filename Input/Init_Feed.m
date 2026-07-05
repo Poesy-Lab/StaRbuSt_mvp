@@ -1,7 +1,7 @@
 function [x] = Init_Feed(u, unit)
-%Init_Feed  급기 라인(탱크-인젝터 배관) 설정 초기화
+%Init_Feed  공급 라인(탱크-인젝터 배관) 설정 초기화
 %   u.feed.mode = 0 (또는 필드 없음): 탱크-인젝터 직결 (기존 동작, 구버전 설정 호환)
-%   u.feed.mode = 1: 급기 라인 모델 사용 (Feed_Line.m; CoolProp 물성 모델 필요)
+%   u.feed.mode = 1: 공급 라인 모델 사용 (Feed_Line.m; CoolProp 물성 모델 필요)
 x = struct();
 
 % 구버전 설정 호환: feed 필드가 없으면 직결 모드

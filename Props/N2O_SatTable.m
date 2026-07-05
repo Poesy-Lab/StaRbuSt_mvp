@@ -1,8 +1,8 @@
 function out = N2O_SatTable(P)
-%N2O_SatTable  N2O 포화선 물성 테이블 조회 (급기 라인/HEMc 핫루프 고속화)
+%N2O_SatTable  N2O 포화선 물성 테이블 조회 (공급 라인/HEMc 핫루프 고속화)
 %   첫 호출에서 CoolProp으로 포화선(0.92~71.5 bar, 420점)을 1회 구축한 뒤,
 %   이후에는 py 브리지 호출 없이 보간(griddedInterpolant, pchip)으로 조회한다.
-%   급기 라인 행진과 HEM 플럭스 계산은 전부 포화 돔 내부의 (P, 지렛대) 연산이므로
+%   공급 라인 행진과 HEM 플럭스 계산은 전부 포화 돔 내부의 (P, 지렛대) 연산이므로
 %   포화선 7종(T, h_l, h_v, s_l, s_v, rho_l, rho_v)만 있으면 충분하다.
 %
 %   입력:  P [Pa] (스칼라)

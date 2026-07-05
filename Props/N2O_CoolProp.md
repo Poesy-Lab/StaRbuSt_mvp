@@ -22,7 +22,7 @@ Author: SRS 33기 박호진
 | `satDensity(T)` | 포화 액/증기 밀도 | CoolProp 포화 계산 |
 | `GetPropsPS(P, s)` | **P–s 직접 플래시** (등엔트로피 상태) | `InjState_*`, FML/HEMc 초크점 탐색이 사용 |
 | `GetPropsDH(rho, h)` | **ρ–h 직접 플래시** (탱크 엔탈피 알고리즘) | `Tank_{Pre,Liq,Vap}Feed`가 사용 |
-| `GetPropsPH(P, h)` | **P–h 직접 플래시** (단열 라인에서 h 보존) | `Feed_Line`(급기 라인 행진)이 사용 |
+| `GetPropsPH(P, h)` | **P–h 직접 플래시** (단열 라인에서 h 보존) | `Feed_Line`(공급 라인 행진)이 사용 |
 | `CEACard` | CEA 등록 카드 (N2O.m과 동일) | |
 
 - 상태 솔버들은 `ismethod(fluid, 'GetPropsPS')` / `'GetPropsDH'`로 직접 플래시 지원 여부를 감지해 **lsqnonlin 역산을 건너뜁니다**. 인하우스 모델 선택 시에는 기존 lsqnonlin 경로가 그대로 사용됩니다 (과거 결과 재현성 유지).

@@ -40,8 +40,8 @@ u.vent.model = "ICF(Isentropic Choked Flow)"; % ICF, CdA
 u.vent.Cd = 0.1; % 토출계수
 u.vent.mode = 1; % 0: 벤트포트 없음, 1: 벤트포트 있음
 
-%% Feed Line (급기 라인: 탱크 -> 플렉시블 -> 파이프1 -> 볼밸브 -> 파이프2 -> 인젝터)
-u.feed.mode = 1; % 0: 탱크-인젝터 직결(기존 동작), 1: 급기 라인 모델 (CoolProp 물성 + 인젝터 모델 HEMc 필요)
+%% Feed Line (공급 라인: 탱크 -> 플렉시블 -> 파이프1 -> 볼밸브 -> 파이프2 -> 인젝터)
+u.feed.mode = 1; % 0: 탱크-인젝터 직결(기존 동작), 1: 공급 라인 모델 (CoolProp 물성 + 인젝터 모델 HEMc 필요)
 
 u.feed.K_entrance = 0.5; % 탱크 출구 입구손실 계수
 
@@ -71,12 +71,12 @@ u.inj.d = 1.4;
 unit.inj.d = "mm"; % m, mm, cm, in
 
 u.inj.n = 28; % 인젝터 개수
-u.inj.Cd = 0.6; % 토출계수 (HEMc+급기라인 결합, 2026 분무+연소시험 교정값; 직결 구성 FML 사용 시 시스템 Cd ~0.3)
+u.inj.Cd = 0.6; % 토출계수 (HEMc+공급라인 결합, 2026 분무+연소시험 교정값; 직결 구성 FML 사용 시 시스템 Cd ~0.3)
 
 u.inj.L = 7; % 인젝터 플레이트 두께
 unit.inj.L = "mm"; % m, mm, cm, in
 
-u.inj.model_LiqFeed = "HEMc(Two-Phase Inlet HEM Choked)"; % NHNE, CdA, FML(보이드율 가중, 직결용), HEMc(2상 입구 HEM+초크캡, 급기라인 결합)
+u.inj.model_LiqFeed = "HEMc(Two-Phase Inlet HEM Choked)"; % NHNE, CdA, FML(보이드율 가중, 직결용), HEMc(2상 입구 HEM+초크캡, 공급라인 결합)
 u.inj.model_VapFeed = "NHNE(FML Vapor Draining, La Luna 2022)"; % ICF, CdA, NHNE(FML 증기상, La Luna 2022)
 
 %% Sub injector

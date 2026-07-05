@@ -1,10 +1,10 @@
 function [x] = Inj_HEMc_LiqFeed(x)
-%Inj_HEMc_LiqFeed  2상 입구 HEM_c 인젝터 모델 - 액상 유출 (선택적 급기 라인 결합)
+%Inj_HEMc_LiqFeed  2상 입구 HEM_c 인젝터 모델 - 액상 유출 (선택적 공급 라인 결합)
 %   mdot = Cd * A * G_HEM(max(P2, r_choke*P1)),  G_HEM(Pe) = rho2*sqrt(2(h1-h2)), s2 = s1
 %   - HEM(균질 평형)은 고전 2상 임계유동 모델(Starkman 1964/Moody 1965/Wallis 1969).
 %     초크 캡(플럭스 최대점 수치 탐색)은 La Luna 2022 4.3절/2023 2.3절 방식
 %     (포화액 상류의 임계 압력비 ~0.75-0.77).
-%   - x.feed.mode == 1: Feed_Line(급기 라인)과 유량 이분법으로 결합.
+%   - x.feed.mode == 1: Feed_Line(공급 라인)과 유량 이분법으로 결합.
 %     상류 = 라인 출구의 2상 혼합 상태 (라인 플래싱 반영).
 %     근거: 2026 수류시험 - 인젝터 단독 판정(2상 입구 HEM_c만 물리적 Cd에 근접) 및
 %     결합 리허설(mdot +4~12%, P_inj RMSE ~0.2 bar, Cd~0.55).
@@ -48,7 +48,7 @@ feed_out = [];
 if x.tank.P > P2
 
     if use_feed
-        % ============ 급기 라인 결합: 유량 이분법 ============
+        % ============ 공급 라인 결합: 유량 이분법 ============
         % 초크 압력비: 직전 스텝 출구 압력 추정점에서 계산 (캐시 포함, P1에 둔감)
         if isempty(P1_prev) || ~isfinite(P1_prev)
             P1_est = 0.6 * x.tank.P;
