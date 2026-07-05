@@ -1,49 +1,118 @@
-# StaRbuSt — N₂O 하이브리드 로켓 시뮬레이션 (MATLAB)
+# StaRbuSt
 
-아산화질소(N₂O) 산화제 기반 하이브리드 로켓의 연소·추진 성능을 시뮬레이션하는 MATLAB 코드베이스입니다.
-탱크 배출(자가가압) → 인젝터 → 그레인 연소 → 연소실 → 노즐로 이어지는 전체 계통을 시간 적분으로 계산하고,
-비행 시뮬레이션(Flight_simul)과 지상연소시험(TMS) 데이터 분석 도구를 포함합니다.
+아산화질소(N₂O) 자가가압 하이브리드 로켓의 성능을 예측하는 MATLAB 시뮬레이터.
+탱크 블로다운에서 급기 라인, 인젝터, 그레인 연소, 노즐까지 한 사이클로 시간 적분한다.
+2026년 수류(분무)시험과 연소시험 실측으로 교정을 마쳤고, 6자유도 비행 시뮬레이션과
+시험 데이터 비교 도구가 같이 들어 있다.
 
-## 실행 방법
+## 준비물
 
-MATLAB에서 **이 폴더를 현재 폴더(cwd)로 연 상태에서** 실행합니다 (코드가 `addpath(genpath('Input'))` 등 상대 경로를 사용).
+- MATLAB. R2026a에서 개발했다. `lsqnonlin`을 쓰는 경로가 있어서 Optimization Toolbox가 필요하다.
+- 파이썬 패키지 두 개. 연소 해석(CEA)과 N₂O 물성이 파이썬으로 돌아간다.
 
-```matlab
-Test_StaRbuSt   % 실행 후 Config/ 안의 설정 파일 이름을 확장자 없이 입력 (예: 2025_SRS_Hybrid_Oneshot_Cd38_final)
+```bash
+pip install -r requirements.txt
 ```
 
-- 설정 파일은 `Config/` 하위 폴더까지 재귀 검색되므로 폴더 구분 없이 파일 이름만 입력하면 됩니다.
-- 시뮬레이션 결과는 `Mat_Data/<설정이름>/` 하위 폴더에 자동 저장됩니다.
-- 새 입력 조건을 저장하려면 [Config/Save_Input_Config.m](Config/Save_Input_Config.m)에서 값을 수정 후 실행 → 실행 위치와 무관하게 `Config/`에 저장됩니다.
-- **모델 선택** (설정 파일에서 문자열로 지정):
-  - 인젝터 질량유량: `u.inj.model_LiqFeed` — NHNE(Dyer), CdA, **FML**(보이드율 가중, La Luna et al. 2022 + 2상 초크점 수치 탐색) / `u.inj.model_VapFeed` — ICF, CdA, NHNE(FML 증기상)
-  - 산화제 물성: `u.tank.prop_model` — 인하우스 Helmholtz EOS(Lemmon–Span 2006, 기본) 또는 **CoolProp**(동일 상관식, 내장 P–s/ρ–h 플래시로 상태 계산이 견고·고속, MATLAB pyenv 필요)
-  - 급기 라인: `u.feed.mode` — 탱크-인젝터 직결(0) 또는 **2상 균질류 라인 모델**(1: 플렉시블·볼밸브 압손 + 라인 플래싱, Tada 2024 검증 조합; 인젝터 모델 `HEMc`(2상 입구 HEM+초크 캡)와 결합, 2026 수류시험으로 검증)
-- 연소 불안정성 주파수 해석: [Test_Frequency.m](Test_Frequency.m)
-- 비행 시뮬레이션: [Flight_simul/flight_simul_main.m](Flight_simul/flight_simul_main.m)
+MATLAB에서 어느 파이썬을 쓸지 한 번 지정해 준다. MATLAB을 켠 직후, 파이썬을 아직 안 부른 상태에서만 바꿀 수 있다.
+
+```matlab
+pyenv('Version', '/opt/homebrew/anaconda3/bin/python3')   % 본인 경로로
+```
+
+무엇이 언제 필요한지는 아래와 같다. 없으면 해당 기능만 빠지고 나머지는 돌아간다.
+
+| 하려는 일 | 필요한 패키지 |
+|---|---|
+| 연소 시뮬레이션 | rocketcea |
+| CoolProp 물성 (`u.tank.prop_model = "CoolProp"`) | CoolProp |
+| 급기 라인 모델 (`u.feed.mode = 1`) | CoolProp |
+| 분무 모드 + 인하우스 EOS | 없음 |
+
+## 실행
+
+MATLAB에서 이 폴더를 현재 폴더로 열고 시작한다. 코드가 상대 경로로 `addpath`를 하기 때문이다.
+
+대화형 실행:
+
+```matlab
+Test_StaRbuSt
+```
+
+설정 이름을 물어보면 `Config/` 안의 mat 파일 이름을 확장자 없이 입력한다. 하위 폴더까지 알아서 찾는다.
+끝나면 플롯 창이 뜨고 결과는 `Mat_Data/<설정이름>/`에 저장된다.
+
+스크립트 실행(플롯 없음, 스윕용):
+
+```matlab
+[y, x] = Run_Config('2026_nova_line_hot');   % 전체 시간 이력 y까지 저장
+```
+
+들어 있는 대표 설정:
+
+| 설정 | 내용 |
+|---|---|
+| `2026_nova_line_hot` | 2026-07-03 연소시험 재현. 교정 기준 케이스 |
+| `2026_nova_line_cold` | 2026 N₂O 분무시험 재현 (급기 라인 + 2상 인젝터) |
+| `2026_nova_redesign` | 고도 250 m 제한 재설계안 (탱크 112 mm, 상세는 docs/재설계) |
+
+시험 데이터와 겹쳐 보기:
+
+```matlab
+addpath('TMS_Data')
+Compare_2026_Spray()      % 분무시험 vs 시뮬
+Compare_2026_HotFire()    % 연소시험 vs 시뮬
+```
+
+원시 계측 파일(lvm)은 저장소에 없어서 클론만 받아서는 이 두 개를 다시 그릴 수 없다.
+결과 그림은 `TMS_Data/Compare_2026_*.png`로 들어 있다.
+
+비행 시뮬레이션:
+
+```matlab
+addpath('Flight_simul')
+Flight_From_Config('2026_nova_redesign')     % 고도, 레일 탈출속도 요약 출력
+```
+
+궤적 애니메이션까지 보려면 `Flight_simul/flight_simul_main.m`을 직접 연다.
+
+## 새 조건 만들기
+
+`Config/Save_Input_Config.m`에서 값을 고치고 실행하면 `Config/`에 mat 파일이 저장된다.
+자주 만지게 되는 스위치는 셋이다.
+
+- `u.inj.model_LiqFeed` : 인젝터 유량 모델. NHNE, CdA, FML, HEMc 중 문자열 키워드로 고른다.
+  급기 라인을 켤 거라면 HEMc를 써야 한다.
+- `u.tank.prop_model` : 산화제 물성. 기본은 인하우스 Helmholtz EOS(Lemmon–Span 2006)이고,
+  "CoolProp"을 지정하면 같은 상관식을 CoolProp 플래시로 계산한다. 급기 라인 모델은 CoolProp 전용.
+- `u.feed.mode` : 0이면 탱크와 인젝터 직결, 1이면 급기 라인 모델.
+  플렉시블 호스와 볼밸브의 2상 압력손실을 계산한다. 2026 수류시험으로 검증했다.
+
+연소 불안정 주파수 해석은 `Test_Frequency.m`에 따로 있다.
 
 ## 폴더 구조
 
 | 폴더 | 내용 |
 |---|---|
-| `Components/` | 구성품별 물리 모델 (1. Tank, 2. Vent-port, 3. Valve, 4. Pipe, 5. Injector, 6. Grain, 7. Combustor, 8. Nozzle) |
-| `System/` | 계통 통합 시뮬레이션 루프 (`System.m` 사용 중, `System_new.m`은 개발 중이던 버전) |
-| `Input/` | 초기 조건 설정 함수 (`Init_*.m`, `Input.m`) |
-| `Config/` | 입력 설정 (`Save_Input_Config.m`, `default_config.mat`) — `2025_campaign/`(2025 캠페인 스윕), `archive_2018-2024/`(과거 연도) 하위 폴더로 구분 |
-| `Props/` | N₂O 물성 (Helmholtz EOS 기반 상태방정식) |
-| `Output/` | 결과 플롯/저장 함수 (`PlotResults.m` + 구성품별 `Plot_*` / `Gen_*`) |
-| `Mat_Data/` | 시뮬레이션 결과 (`.mat`) — 실행(설정)별 하위 폴더로 정리, `GenMatResults`가 자동으로 하위 폴더에 저장 |
-| `Flight_simul/` | 6-DOF 비행 시뮬레이션 및 추력 데이터 |
-| `TMS_Data/` | TMS(지상연소시험) 데이터 분석 스크립트 및 가공 결과 (원시 계측 데이터는 용량 문제로 저장소에 미포함) |
-| `docs/` | 순서도(Mermaid/Obsidian canvas), 수식 정리, 논문 요약 노트(`paper/`), 2026 시험 조건·처리 문서(`시험 정보/`), 재설계 보고(`재설계/`) |
+| `Components/` | 구성품별 물리 모델. Tank, Vent-port, Valve, Pipe, Injector, Grain, Combustor, Nozzle |
+| `System/` | 시뮬레이션 메인 루프 (`System.m`) |
+| `Input/` | 초기 조건과 단위 변환 (`Init_*.m`, `Input.m`) |
+| `Config/` | 입력 설정. 연도별 하위 폴더로 구분 |
+| `Props/` | N₂O 물성. 인하우스 EOS와 CoolProp 브리지 |
+| `Output/` | 결과 플롯과 mat 저장 |
+| `Mat_Data/` | 시뮬레이션 결과. 설정별 하위 폴더 |
+| `Flight_simul/` | 6자유도 비행 시뮬레이션 |
+| `TMS_Data/` | 지상시험 데이터 분석과 시험-시뮬 비교 도구 |
+| `docs/` | 흐름도, 수식 정리, 논문 요약 노트, 2026 시험 문서, 재설계 보고 |
 
-용량 관계로 원시·가공 계측 데이터(LVM/xlsx)와 논문 PDF 원문은 저장소에 포함하지 않습니다 (로컬 보관, 요청 시 제공). 시험 조건 문서·처리 스크립트·결과 그림은 포함되어 있습니다.
+거의 모든 `.m` 파일 옆에 같은 이름의 `.md`가 있다. 모델의 출처와 수식을 거기에 적어 뒀다.
 
-대부분의 `.m` 파일에는 같은 이름의 `.md` 문서가 짝으로 존재합니다 (모델 설명·수식).
+원시 계측 데이터(lvm, xlsx)와 논문 PDF 원문은 용량 때문에 올리지 않았다. 필요하면 연락 바람.
+시험 조건 문서와 처리 스크립트, 결과 그림은 `docs/시험 정보/`에 있다.
 
-## 참고 문서
+## 더 읽을 것
 
 - [docs/StaRbuSt_flowchart.md](docs/StaRbuSt_flowchart.md) — 전체 계산 흐름도
 - [docs/Mermaid_math.md](docs/Mermaid_math.md) — 수식 정리
-- [docs/StaRbuSt 폴더 구조.md](docs/StaRbuSt%20폴더%20구조.md) — 구버전(2025-05) 기준 파일 목록 (Valve/Pipe/주파수 모델 반영 전)
+- [docs/재설계/재설계 결과.md](docs/재설계/재설계%20결과.md) — 2026 재설계 근거와 결론
 - [Test_StaRbuSt.md](Test_StaRbuSt.md) — 메인 스크립트 설명

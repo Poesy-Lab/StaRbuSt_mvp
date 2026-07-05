@@ -1,0 +1,9 @@
+# MATLAB이 pyenv를 거쳐 호출하는 파이썬 패키지.
+# 설치:  pip install -r requirements.txt
+#
+# rocketcea : NASA CEA 연소 해석. 연소 시뮬레이션에 필요하다.
+#             설치가 실패하면 Fortran 컴파일러부터 확인할 것 (macOS: brew install gcc).
+# CoolProp  : N2O 물성. u.tank.prop_model = "CoolProp" 또는 급기 라인 모델(u.feed.mode = 1)에 필요하다.
+
+rocketcea>=1.2
+CoolProp>=6.6
