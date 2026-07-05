@@ -12,6 +12,18 @@
 - [2025 일본 노시로 대회 준비기](https://blog.naver.com/wdh3168/223986008141)
 - [KAU SRS 유튜브](https://www.youtube.com/@KAU_SRS_Rocket/videos)
 
+## 시험 검증
+
+2026년 실측 데이터 위에 시뮬레이션을 겹친 결과다. 같은 파라미터 세트 하나로 두 시험을 함께 맞췄다.
+
+연소시험(2026-07-03). 추력 오차 -0.6%, 총임펄스 -5%.
+
+![연소시험 비교](TMS_Data/Compare_2026_HotFire_2026_nova_line_hot.png)
+
+수류시험 1차(N₂O 분무). 인젝터 전방 압력 RMSE 1.3 bar.
+
+![수류시험 비교](TMS_Data/Compare_2026_Spray_Test1_2026_nova_line_cold.png)
+
 ## 준비물
 
 - MATLAB. R2026a에서 개발했다. `lsqnonlin`을 쓰는 경로가 있어서 Optimization Toolbox가 필요하다.
